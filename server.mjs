@@ -29,9 +29,13 @@ let keyedUnits = 0; // keyed calls this process made (each is 1 unit)
 let times = {}; // height -> unix seconds
 try { state = { ...state, ...JSON.parse(fs.readFileSync(CACHE, 'utf8')) }; log(`cache: ${state.names.length} names`); } catch { log('cache: none'); }
 try { times = JSON.parse(fs.readFileSync(TIMES, 'utf8')); } catch {}
-let byLabel = new Map(), byAddr = new Map();
+let byLabel = new Map(), byAddr = new Map(), rankOf = new Map();
+// Claim rank: first claimed = #1. Order by registration block height, then by the API list index `i`
+// (the protocol's canonical order within a block). Fixed for a name regardless of any filter or sort.
 function reindex() {
-  byLabel = new Map(); byAddr = new Map();
+  byLabel = new Map(); byAddr = new Map(); rankOf = new Map();
+  state.names.forEach((n, k) => { if (typeof n.i !== 'number') n.i = k; }); // older caches dropped `i`; list position == i
+  [...state.names].sort((a, b) => a.height - b.height || a.i - b.i).forEach((n, k) => rankOf.set(n.name, k + 1));
   for (const n of state.names) {
     const label = n.name.split('.')[0];
     byLabel.set(label, n);
@@ -74,7 +78,7 @@ async function poll() {
       do {
         const r = await getJson(`${API}/names?after=${after}`, { keyed: true });
         if (r.status !== 200) { ok = false; break; }
-        page = r.body; names.push(...page.names.map(({ i, ...n }) => n)); after = page.next;
+        page = r.body; names.push(...page.names.map((n, k) => ({ ...n, i: typeof n.i === 'number' ? n.i : names.length + k }))); after = page.next;
       } while (after !== null && after !== undefined);
       if (ok && verifyChain(names, page.digest)) { info.digest = page.digest; info.count = page.count; info.height = page.height; break; }
       names = null;
@@ -124,7 +128,7 @@ async function mintLookup(full) {
   return v;
 }
 
-const pub = (n) => n && ({ name: n.name, label: n.name.split('.')[0], ending: n.name.split('.')[1], to: n.to, id: n.id, height: n.height, time: times[n.height] ?? null });
+const pub = (n) => n && ({ name: n.name, label: n.name.split('.')[0], ending: n.name.split('.')[1], to: n.to, id: n.id, height: n.height, i: n.i, rank: rankOf.get(n.name) ?? null, time: times[n.height] ?? null });
 
 async function check(q) {
   const c = classify(q);

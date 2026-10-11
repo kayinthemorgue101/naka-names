@@ -113,51 +113,63 @@ function renderCheck(r) {
 }
 
 // ---------- directory ----------
-const F = { q: '', end: 'all', len: 'all', kind: 'all', sort: 'new' };
+// Claim rank (#1 = first claimed): block height, then the API's canonical index i. The server sends it; fall back to computing it.
+function withRank() {
+  const L = DATA.names.map((n, k) => ({ ...n, i: n.i ?? k }));
+  if (L.every((n) => n.rank)) return L;
+  [...L].sort((a, b) => a.height - b.height || a.i - b.i).forEach((n, k) => { n.rank = k + 1; });
+  return L;
+}
+const F = { q: '', end: 'all', len: 'all', kind: 'all', sort: 'first' };
+const SORTS = ['first', 'last', 'az', 'short'];
+const SORT_ALIAS = { old: 'first', oldest: 'first', new: 'last', newest: 'last' }; // old ?sort= links keep working
 function directory() {
   nav('/names');
-  const sp = new URLSearchParams(location.search); for (const k of Object.keys(F)) if (sp.get(k)) F[k] = sp.get(k);
+  const sp = new URLSearchParams(location.search);
+  for (const k of Object.keys(F)) if (sp.get(k)) F[k] = sp.get(k);
+  F.sort = SORT_ALIAS[F.sort] ?? F.sort; if (!SORTS.includes(F.sort)) F.sort = 'first';
   const lens = [...new Set(DATA.names.map((n) => n.label.length))].sort((a, b) => a - b);
   app.innerHTML = `
   <h1>The <em>register</em></h1>
-  <p class="lede">Every shielded name, in the order Bitcoin buried them.</p>
+  <p class="lede">Every shielded name, .naka and .shield together, in the order Bitcoin buried them. <b>#1</b> claimed first.</p>
   <div class="filters">
     <input id="fq" type="search" placeholder="search names…" value="${esc(F.q)}" aria-label="Search" autocapitalize="none" spellcheck="false">
     <select id="fe" aria-label="Ending"><option value="all">all endings</option><option value="naka">.naka</option><option value="shield">.shield</option></select>
     <select id="fl" aria-label="Length"><option value="all">any length</option>${lens.map((l) => `<option value="${l}">${l} chars</option>`).join('')}</select>
     <select id="fk" aria-label="Kind"><option value="all">any chars</option><option value="digits">digits only</option><option value="letters">letters only</option><option value="mixed">mixed</option></select>
-    <select id="fs" aria-label="Sort"><option value="new">newest</option><option value="old">oldest</option><option value="az">a → z</option><option value="short">shortest</option></select>
+    <select id="fs" aria-label="Sort"><option value="first">First claimed</option><option value="last">Latest claimed</option><option value="az">A → Z</option><option value="short">Shortest</option></select>
   </div>
   <div class="count" id="cnt"></div>
-  <table><thead><tr><th>Name</th><th>Block</th><th class="hide-m">Inscription</th><th>Points at</th></tr></thead><tbody id="rows"></tbody></table>
+  <table><thead><tr><th class="rk" title="Claim rank: #1 = first claimed">#</th><th>Name</th><th>Block</th><th class="hide-m">Inscription</th><th>Points at</th></tr></thead><tbody id="rows"></tbody></table>
   <h2>Reverse lookup</h2>
   <p class="dim" style="margin:0;font-size:13px">Paste a shielded address (shord1…) to see which names point at it.</p>
   <form class="rev" id="rf"><input id="ra" placeholder="shord1…" spellcheck="false" autocapitalize="none" aria-label="Shielded address"><button>Look up</button></form>
   <div id="rres"></div>`;
   $('#fe').value = F.end; $('#fl').value = F.len; $('#fk').value = F.kind; $('#fs').value = F.sort;
-  const upd = () => { F.q = $('#fq').value.trim().toLowerCase(); F.end = $('#fe').value; F.len = $('#fl').value; F.kind = $('#fk').value; F.sort = $('#fs').value; draw(); const u = new URLSearchParams(Object.entries(F).filter(([k, v]) => v && v !== 'all' && !(k === 'sort' && v === 'new'))); history.replaceState(null, '', `/names${u.size ? '?' + u : ''}`); };
+  const upd = () => { F.q = $('#fq').value.trim().toLowerCase(); F.end = $('#fe').value; F.len = $('#fl').value; F.kind = $('#fk').value; F.sort = $('#fs').value; draw(); const u = new URLSearchParams(Object.entries(F).filter(([k, v]) => v && v !== 'all' && !(k === 'sort' && v === 'first'))); history.replaceState(null, '', `/names${u.size ? '?' + u : ''}`); };
   ['#fq', '#fe', '#fl', '#fk', '#fs'].forEach((s) => $(s).addEventListener('input', upd));
   $('#rf').onsubmit = (e) => { e.preventDefault(); const a = $('#ra').value.trim().toLowerCase(); if (/^shord1[0-9a-f]{128}$/.test(a)) go(`/${a}`); else $('#rres').innerHTML = `<div class="result invalid" style="margin-top:10px"><p class="sub" style="margin:0">That's not a shielded address. Those start with <b>shord1</b> and run 128 hex characters after it.</p></div>`; };
   draw();
 }
 function draw() {
-  let L = DATA.names.map((n, i) => ({ ...n, i }));
+  let L = withRank();
   if (F.q) L = L.filter((n) => n.name.includes(F.q));
   if (F.end !== 'all') L = L.filter((n) => n.ending === F.end);
   if (F.len !== 'all') L = L.filter((n) => n.label.length === Number(F.len));
   if (F.kind === 'digits') L = L.filter((n) => /^\d+$/.test(n.label));
   if (F.kind === 'letters') L = L.filter((n) => /^[a-z]+$/.test(n.label));
   if (F.kind === 'mixed') L = L.filter((n) => !/^\d+$/.test(n.label) && !/^[a-z]+$/.test(n.label));
-  const s = { new: (a, b) => b.i - a.i, old: (a, b) => a.i - b.i, az: (a, b) => a.name.localeCompare(b.name), short: (a, b) => a.label.length - b.label.length || a.name.localeCompare(b.name) }[F.sort];
+  const s = { first: (a, b) => a.rank - b.rank, last: (a, b) => b.rank - a.rank, az: (a, b) => a.name.localeCompare(b.name), short: (a, b) => a.label.length - b.label.length || a.name.localeCompare(b.name) }[F.sort] ?? ((a, b) => a.rank - b.rank);
   L.sort(s);
   $('#cnt').textContent = `${L.length} of ${DATA.names.length} names`;
   const free = F.q && /^[a-z0-9-]{3,20}$/.test(F.q.replace(/\.(naka|shield)$/, '')) && !DATA.names.some((n) => n.label === F.q.replace(/\.(naka|shield)$/, ''));
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
+    <td class="rk">#${n.rank}</td>
     <td class="nm"><a href="/${esc(n.name)}">${nameHtml(n.name)}</a></td>
     <td><a href="${blockUrl(n.height)}" target="_blank" rel="noopener" title="${esc(fmtDate(n.time) ?? '')}">${n.height}</a></td>
     <td class="hide-m"><a href="${insc(n.id)}" target="_blank" rel="noopener">${esc(n.id.slice(0, 8))}… ↗</a></td>
-    <td><button class="copy" data-copy="${esc(n.to)}" title="${esc(n.to)}">${esc(n.to.slice(6, 12))}…${esc(n.to.slice(-4))} ⧉</button></td></tr>`).join('')
-    : `<tr><td colspan="4"><div class="empty">No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}</div></td></tr>`;
+    <td><button class="copy" data-copy="${esc(n.to)}" title="${esc(n.to)}"><span class="hide-m">${esc(n.to.slice(6, 12))}</span>…${esc(n.to.slice(-4))} ⧉</button></td></tr>`).join('')
+    : `<tr><td colspan="5"><div class="empty">No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}</div></td></tr>`;
 }
 
 // ---------- name & address pages ----------
@@ -171,10 +183,10 @@ async function namePage(seg) {
   }
   const n = await r.json();
   const others = n.ending === 'naka' ? `${n.label}.shield` : `${n.label}.naka`;
-  const idx = DATA.names.findIndex((x) => x.name === n.name);
+  const rk = n.rank ?? withRank().find((x) => x.name === n.name)?.rank;
   const same = DATA.names.filter((x) => x.to === n.to && x.name !== n.name);
   app.innerHTML = `<p><a href="/names">← register</a></p>
-  <p class="dim" style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.2em">Shielded name #${idx + 1}</p>
+  <p class="dim" style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.2em">Claimed <b class="rank">#${rk ?? '?'}</b> of ${DATA.names.length}</p>
   <div class="big">${nameHtml(n.name)}</div>
   <p class="dim" style="margin:0">Claimed at block ${n.height}${n.time ? ` · ${fmtDate(n.time)}` : ''}. <span class="pill x">${esc(others)}</span> is locked with it.</p>
   <div class="card">

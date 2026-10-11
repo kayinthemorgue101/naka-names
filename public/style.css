@@ -77,3 +77,9 @@ td.nm a{color:var(--text);font-weight:700}td.nm a span{color:var(--pink)}td.nm a
   .inwrap input{font-size:18px}.inwrap .suf{display:none}
   form.check button{padding:0 12px}
 }
+/* claim rank */
+th.rk,td.rk{width:1%;white-space:nowrap;text-align:right;padding-right:10px}
+td.rk{font:500 12px var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
+b.rank{color:var(--pink)}
+@media (max-width:640px){th.rk,td.rk{padding-right:4px;font-size:11px}}
+@media (max-width:640px){td.nm{word-break:break-word}td.nm a{overflow-wrap:anywhere}td .copy{padding:0 6px}}
