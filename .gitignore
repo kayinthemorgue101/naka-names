@@ -1,0 +1,13 @@
+# runtime caches + logs (rebuilt on boot from the API / mempool.space)
+data/*
+!data/.gitkeep
+*.log
+*.pid
+# secrets: never commit keys
+.env
+.env.*
+*.env
+.secrets/
+# deps / OS junk
+node_modules/
+.DS_Store

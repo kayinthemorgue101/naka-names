@@ -1,0 +1,9 @@
+{
+  "name": "naka-names",
+  "version": "1.0.0",
+  "private": true,
+  "description": ".naka shielded names checker + directory (no dependencies)",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node server.mjs" }
+}

@@ -1,0 +1,16 @@
+# Render Blueprint for the .naka names checker. Free web service, no dependencies.
+services:
+  - type: web
+    name: naka-names
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: SHIELDED_API_KEY   # set in the Render dashboard; never committed
+        sync: false
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_VERSION
+        value: "20"

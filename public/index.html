@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050507">
+<title>.naka registry — names of the shielded</title>
+<meta name="description" content="Check, browse and look up .naka and .shield shielded names on Bitcoin.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css?v=2">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23050507'/><path d='M16 5 6 9v7c0 6 4.5 9.5 10 11 5.5-1.5 10-5 10-11V9z' fill='none' stroke='%23ff2e88' stroke-width='2.5'/></svg>">
+</head>
+<body>
+<header class="top">
+  <a href="/" class="brand" data-link><span class="shield">⛉</span> <b>.naka</b><span class="dim">registry</span></a>
+  <nav><a href="/" data-link>Check</a><a href="/names" data-link>Directory</a></nav>
+</header>
+<main id="app"><p class="loading">Exhuming the index…</p></main>
+<footer class="foot">
+  <p id="sync" class="dim">—</p>
+  <p class="dim">Unofficial preview. Reads Bitcoin through the <a href="https://ord-dropz.xyz/developers" target="_blank" rel="noopener">Shielded Ordinals API</a>. Rules from <a href="https://github.com/Fl1ntstowned/shielded-ordinals/blob/main/src/v1/names.mjs" target="_blank" rel="noopener">SHORD v1</a>. A name points at a vault; it proves nothing about who holds it.</p>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/app.js?v=2" type="module"></script>
+</body>
+</html>
