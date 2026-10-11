@@ -122,6 +122,11 @@ function withRank() {
 }
 const F = { q: '', end: 'all', len: 'all', kind: 'all', sort: 'first' };
 const SORTS = ['first', 'last', 'az', 'short'];
+// The big toggle: four presets over the ending + sort filters (ending views keep first-claimed order and true overall ranks).
+const VIEWS = [['first', 'First created'], ['newest', 'Newest'], ['naka', '.naka only'], ['shield', '.shield only']];
+const VIEW_SET = { first: { end: 'all', sort: 'first' }, newest: { end: 'all', sort: 'last' }, naka: { end: 'naka', sort: 'first' }, shield: { end: 'shield', sort: 'first' } };
+const viewOf = () => F.end === 'naka' || F.end === 'shield' ? (F.sort === 'first' ? F.end : null) : F.sort === 'first' ? 'first' : F.sort === 'last' ? 'newest' : null;
+function syncSeg() { const v = viewOf(); document.querySelectorAll('#seg [data-view]').forEach((b) => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
 const SORT_ALIAS = { old: 'first', oldest: 'first', new: 'last', newest: 'last' }; // old ?sort= links keep working
 function directory() {
   nav('/names');
@@ -132,6 +137,7 @@ function directory() {
   app.innerHTML = `
   <h1>The <em>register</em></h1>
   <p class="lede">Every shielded name, .naka and .shield together, in the order Bitcoin buried them. <b>#1</b> claimed first.</p>
+  <div class="seg" id="seg" role="group" aria-label="Show">${VIEWS.map(([v, t]) => `<button type="button" data-view="${v}" aria-pressed="false">${t}</button>`).join('')}</div>
   <div class="filters">
     <input id="fq" type="search" placeholder="search names…" value="${esc(F.q)}" aria-label="Search" autocapitalize="none" spellcheck="false">
     <select id="fe" aria-label="Ending"><option value="all">all endings</option><option value="naka">.naka</option><option value="shield">.shield</option></select>
@@ -148,6 +154,7 @@ function directory() {
   $('#fe').value = F.end; $('#fl').value = F.len; $('#fk').value = F.kind; $('#fs').value = F.sort;
   const upd = () => { F.q = $('#fq').value.trim().toLowerCase(); F.end = $('#fe').value; F.len = $('#fl').value; F.kind = $('#fk').value; F.sort = $('#fs').value; draw(); const u = new URLSearchParams(Object.entries(F).filter(([k, v]) => v && v !== 'all' && !(k === 'sort' && v === 'first'))); history.replaceState(null, '', `/names${u.size ? '?' + u : ''}`); };
   ['#fq', '#fe', '#fl', '#fk', '#fs'].forEach((s) => $(s).addEventListener('input', upd));
+  document.querySelectorAll('#seg [data-view]').forEach((b) => b.onclick = () => { const v = VIEW_SET[b.dataset.view]; $('#fe').value = v.end; $('#fs').value = v.sort; upd(); });
   $('#rf').onsubmit = (e) => { e.preventDefault(); const a = $('#ra').value.trim().toLowerCase(); if (/^shord1[0-9a-f]{128}$/.test(a)) go(`/${a}`); else $('#rres').innerHTML = `<div class="result invalid" style="margin-top:10px"><p class="sub" style="margin:0">That's not a shielded address. Those start with <b>shord1</b> and run 128 hex characters after it.</p></div>`; };
   draw();
 }
@@ -161,6 +168,7 @@ function draw() {
   if (F.kind === 'mixed') L = L.filter((n) => !/^\d+$/.test(n.label) && !/^[a-z]+$/.test(n.label));
   const s = { first: (a, b) => a.rank - b.rank, last: (a, b) => b.rank - a.rank, az: (a, b) => a.name.localeCompare(b.name), short: (a, b) => a.label.length - b.label.length || a.name.localeCompare(b.name) }[F.sort] ?? ((a, b) => a.rank - b.rank);
   L.sort(s);
+  syncSeg();
   $('#cnt').textContent = `${L.length} of ${DATA.names.length} names`;
   const free = F.q && /^[a-z0-9-]{3,20}$/.test(F.q.replace(/\.(naka|shield)$/, '')) && !DATA.names.some((n) => n.label === F.q.replace(/\.(naka|shield)$/, ''));
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
