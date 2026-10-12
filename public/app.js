@@ -1,3 +1,4 @@
+import { blocksCard } from './blocks.js';
 // .naka registry — client. Talks only to this server's /api/*. No keys here.
 const $ = (s, el = document) => el.querySelector(s);
 const app = $('#app');
@@ -94,6 +95,7 @@ function home() {
     <div class="stat"><b>${dash(s.perEnding.shield ?? 0)}</b><span>.shield</span></div>
     <div class="stat"><b>${unavailable ? '—' : `${takenThree}<small class="dim" style="font-size:12px">/1000</small>`}</b><span>3-digit taken</span></div>
   </div>
+  <div id="blocks-card"></div>
   ${showIndex ? `
   <h2>Label length</h2>
   <div class="card"><div class="bars">${lens.map(([k, v]) => `<div style="height:${Math.max(4, (v / max) * 100)}%" title="${v} names of length ${k}"><s>${v}</s><i>${k}</i></div>`).join('')}</div><div style="height:16px"></div></div>
@@ -116,6 +118,7 @@ function home() {
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
   document.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { inp.value = b.dataset.q; run(b.dataset.q); });
   if (q) run(q);
+  blocksCard($('#blocks-card'));
 }
 
 async function run(q) {

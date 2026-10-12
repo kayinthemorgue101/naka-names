@@ -204,6 +204,28 @@ async function registrationInfo() {
   return regCache.value;
 }
 
+// ---- Bitcoin tip height for the $SHNAKAS rewards watch (public, no key, ~60s cache) ----
+const BLOCKS_TARGET = 971700;
+const TIP_SOURCES = [['mempool.space', 'https://mempool.space/api/blocks/tip/height'], ['blockstream.info', 'https://blockstream.info/api/blocks/tip/height']];
+let tip = { height: null, fetchedAt: null, source: null, at: 0 };
+async function blocksInfo() {
+  let stale = false;
+  if (!tip.height || Date.now() - tip.at > 60_000) {
+    let got = null;
+    for (const [source, url] of TIP_SOURCES) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        const t = (await r.text()).trim();
+        if (r.ok && /^\d+$/.test(t)) { got = { height: Number(t), fetchedAt: Date.now(), source, at: Date.now() }; break; }
+      } catch {}
+    }
+    if (got) tip = got;
+    else { stale = true; tip.at = Date.now() - 45_000; } // retry in ~15s
+  }
+  const h = tip.height;
+  return { height: h, target: BLOCKS_TARGET, blocksRemaining: h == null ? null : Math.max(0, BLOCKS_TARGET - h), reached: h != null && h >= BLOCKS_TARGET, fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
+}
+
 // ---- http --------------------------------------------------------------
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
@@ -227,6 +249,8 @@ const server = http.createServer(async (req, res) => {
       if (!isShieldedAddress(a)) return send(res, 400, { error: 'not a shielded address (shord1 + 128 hex)' });
       return send(res, 200, { address: a, names: (byAddr.get(a) ?? []).map(pub) });
     }
+    if (p === '/api/blocks') return send(res, 200, await blocksInfo());
+    if (p === '/blocks') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'blocks.html')).pipe(res); }
     if (p === '/api/health') return send(res, 200, { ok: true, names: state.names.length, height: state.info?.height, keyedUnitsThisRun: keyedUnits });
     // static, else the SPA shell (/, /names, /obi.naka, /shord1…)
     const f = path.join(DIR, 'public', path.normalize(p).replace(/^(\.\.[/\\])+/, ''));
