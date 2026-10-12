@@ -104,7 +104,8 @@ b.rank{color:var(--pink)}
 .seg button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 @media (max-width:640px){.seg{grid-template-columns:1fr 1fr;gap:6px}.seg button{min-height:52px;font-size:12.5px;white-space:normal;line-height:1.2}}
 .secure p{margin:.4em 0}
-.secure a.vault{color:var(--pink)}
+.secure a.vault,.sendto a.vault{color:var(--pink)}
+.sendto p{margin:.45em 0}
 .secure .go{margin:.75em 0 0}
 a.claim{display:inline-flex;align-items:center;text-decoration:none;text-transform:none;letter-spacing:.04em}
 a.claim:hover{text-decoration:none;filter:brightness(1.1)}

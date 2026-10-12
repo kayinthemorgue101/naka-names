@@ -258,7 +258,12 @@ async function namePage(seg) {
     </dl>
   </div>
   ${same.length ? `<h2>Also points here</h2><div class="recent">${same.map((x) => `<a href="/${esc(x.name)}">${nameHtml(x.name)}</a>`).join('')}</div>` : ''}
-  <p class="note">To send a shielded piece here, type <b>${esc(n.name)}</b> in the Shielded Vault's send box. A name is a public signpost to a vault. It doesn't prove who holds the vault, and it can never be moved, edited, or resold to point elsewhere.</p>`;
+  <h2>Send to a .naka name</h2>
+  <div class="sendto">
+    <p>Want to send a Shielded Ordinal to <b>${nameHtml(n.name)}</b>?</p>
+    <p>Simply open the <a class="vault" href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a>, enter <b>${nameHtml(n.name)}</b> in the Send field, and follow the steps to complete your transfer.</p>
+    <p>Your .naka name serves as a destination for receiving Shielded Ordinals on Bitcoin.</p>
+  </div>`;
 }
 
 async function addressPage(a) {
