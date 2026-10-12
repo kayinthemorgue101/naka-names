@@ -1,6 +1,6 @@
 # .naka registry (local preview)
 
-The public site stays at https://naka-names.onrender.com/.
+The public site is https://naka-names.xyz/ (old naka-names.onrender.com links 301-redirect there).
 
 ## Publish
 Merging to `main` does not happen from this branch by itself. To publish after review:
