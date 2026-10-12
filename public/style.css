@@ -68,10 +68,11 @@ td.nm a{color:var(--text);font-weight:700}td.nm a span{color:var(--pink)}td.nm a
 .mark-built{margin-top:3px;font:500 11px/1.4 var(--mono);letter-spacing:.04em;color:#9a9aaa}
 .sym{display:inline-block;vertical-align:-2px}
 .sym.star{vertical-align:0;margin:0 1px}
-.mark-by{margin-top:4px;font:500 12px/1.45 var(--mono);color:#c8c8d4}
+.mark-by{margin-top:6px;font:500 12px/1.45 var(--mono);color:#c8c8d4;letter-spacing:.04em}
+.mark-social{margin-top:18px;font:500 12px/1.45 var(--mono);color:#c8c8d4}
 .mark-dropz{margin-top:3px;font:500 11px/1.45 var(--mono);color:#9a9aaa}
-.mark-by a,.mark-dropz a{color:inherit;text-decoration:none}
-.mark-by a:hover,.mark-dropz a:hover{color:#a78bfa;text-decoration:none}
+.mark-social a,.mark-dropz a{color:inherit;text-decoration:none}
+.mark-social a:hover,.mark-dropz a:hover{color:#a78bfa;text-decoration:none}
 .mark-note{margin-top:3px;font:400 10px/1.45 var(--mono);color:var(--dim)}
 .mark-note .yet{color:#a78bfa;white-space:nowrap}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--lime);color:#000;font:700 13px var(--mono);padding:8px 14px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
