@@ -68,8 +68,11 @@ async function poll() {
     if (status !== 200 || typeof info.count !== 'number') throw new Error(`/names/info ${status}`);
     state.lastPollAt = Date.now(); state.lastPollOk = true;
     const changed = !state.info || info.digest !== state.info.digest || info.count !== state.names.length;
-    if (!changed) { state.info = info; return; }
+    if (!changed) { state.info = info; state.verified = verifyChain(state.names, info.digest); return; }
     log(`names changed: ${state.names.length} -> ${info.count}; refetching`);
+    // Keep the open index head even if the keyed list cannot be loaded. Do not treat a partial list as verified.
+    state.info = info;
+    state.verified = false;
     // the list is append-only except on reorg: try to fetch only the new tail, verify the whole chain, else refetch from 0
     let names = [];
     for (const start of state.names.length && state.names.length <= info.count ? [state.names.length, 0] : [0]) {
@@ -132,18 +135,33 @@ const pub = (n) => n && ({ name: n.name, label: n.name.split('.')[0], ending: n.
 
 async function check(q) {
   const c = classify(q);
-  if (!c.ok) return { status: 'invalid', input: q, label: c.label ?? '', reason: c.reason };
-  if (c.reserved) return { status: 'reserved', input: q, label: c.label, reason: 'On the protocol’s reserved list (it would pass for the platform, the protocol or a wallet). Nobody can take it, under either ending.' };
+  if (!c.ok) return { status: 'invalid', input: q, label: c.label ?? '', reason: c.reason, verified: state.verified };
+  if (c.reserved) return { status: 'reserved', input: q, label: c.label, reason: 'On the protocol reserved list. Nobody can register it, under either ending.', verified: state.verified };
   const holder = byLabel.get(c.label);
   const asked = c.ending ? `${c.label}.${c.ending}` : null;
   if (holder) {
     const blocked = NAME_ENDINGS.map((e) => `${c.label}.${e}`).filter((f) => f !== holder.name);
-    return { status: 'taken', input: q, label: c.label, asked, holder: pub(holder), blocked, askedOtherEnding: !!asked && asked !== holder.name };
+    return { status: 'taken', input: q, label: c.label, asked, holder: pub(holder), blocked, askedOtherEnding: !!asked && asked !== holder.name, verified: state.verified };
   }
-  // locally free; ask the mint server whether someone has paid and is waiting on a block
-  const m = await mintLookup(`${c.label}.${c.ending ?? 'naka'}`);
-  if (m?.pending) return { status: 'pending', input: q, label: c.label, asked, name: `${c.label}.${c.ending ?? 'naka'}` };
-  return { status: 'free', input: q, label: c.label, asked, options: NAME_ENDINGS.map((e) => `${c.label}.${e}`), mintAgrees: m ? m.available === true : null, height: state.info?.height ?? null };
+  // Locally absent. Ask the registration service about both endings: a label taken as .shield
+  // still blocks .naka. A service record is not the verified index, so the client must not call it registered.
+  const prefer = c.ending ?? 'naka';
+  const other = prefer === 'naka' ? 'shield' : 'naka';
+  let looked = prefer;
+  let m = await mintLookup(`${c.label}.${prefer}`);
+  if (!m?.pending && !m?.taken && m?.available !== true) {
+    const alt = await mintLookup(`${c.label}.${other}`);
+    if (alt?.pending || alt?.taken) { m = alt; looked = other; }
+  }
+  if (m?.pending) return { status: 'pending', input: q, label: c.label, asked, name: `${c.label}.${looked}`, verified: state.verified };
+  return {
+    status: 'free', input: q, label: c.label, asked,
+    options: NAME_ENDINGS.map((e) => `${c.label}.${e}`),
+    mintAgrees: m ? m.available === true && !m.taken : null,
+    mintConflict: m?.taken === true,
+    verified: state.verified,
+    height: state.info?.height ?? null,
+  };
 }
 
 function stats() {
@@ -151,6 +169,32 @@ function stats() {
   for (const x of n) { const [l, e] = x.name.split('.'); per[e] = (per[e] || 0) + 1; len[l.length] = (len[l.length] || 0) + 1; }
   const three = []; for (let i = 0; i < 1000; i++) { const l = String(i).padStart(3, '0'); const h = byLabel.get(l); three.push(h ? h.name : 0); }
   return { total: n.length, perEnding: per, lengths: len, addresses: byAddr.size, digitsOnly: n.filter((x) => /^\d+$/.test(x.name.split('.')[0])).length, three };
+}
+
+// Public quote the Shielded Vault reads before "Get a name" (no API key).
+// fee and network are sats, as the vault labels them. Postage is not in this response.
+let regCache = { at: 0, ttl: 0, value: undefined };
+async function registrationInfo() {
+  if (regCache.value !== undefined && Date.now() - regCache.at < regCache.ttl) return regCache.value;
+  try {
+    const { status, body } = await getJson(`${MINT}/info`, { timeout: 4000 });
+    if (status !== 200 || !Number.isFinite(Number(body?.fee))) throw new Error(`/names/info ${status}`);
+    regCache = {
+      at: Date.now(),
+      ttl: 60_000,
+      value: {
+        enabled: body.enabled === true,
+        feeSats: Number(body.fee),
+        networkSats: Number.isFinite(Number(body.network)) ? Number(body.network) : null,
+        endings: Array.isArray(body.endings) ? body.endings.filter((e) => typeof e === 'string') : [],
+        checkedAt: Date.now(),
+      },
+    };
+  } catch (e) {
+    log('registration quote:', e.message);
+    regCache = { at: Date.now(), ttl: 15_000, value: regCache.value === undefined ? null : regCache.value };
+  }
+  return regCache.value;
 }
 
 // ---- http --------------------------------------------------------------
@@ -161,7 +205,8 @@ const server = http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://x');
     const p = decodeURIComponent(u.pathname);
     if (p === '/api/names') {
-      return send(res, 200, { info: state.info, verified: state.verified, lastPollAt: state.lastPollAt, lastPollOk: state.lastPollOk, names: state.names.map(pub), stats: stats() });
+      const registration = await registrationInfo();
+      return send(res, 200, { info: state.info, verified: state.verified, lastPollAt: state.lastPollAt, lastPollOk: state.lastPollOk, names: state.names.map(pub), stats: stats(), registration });
     }
     if (p === '/api/check') return send(res, 200, await check(u.searchParams.get('q') ?? ''));
     if (p.startsWith('/api/name/')) {
