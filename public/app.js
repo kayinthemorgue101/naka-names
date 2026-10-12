@@ -86,7 +86,7 @@ function home() {
   <div class="card"><div class="bars">${lens.map(([k, v]) => `<div style="height:${Math.max(4, (v / max) * 100)}%" title="${v} names of length ${k}"><s>${v}</s><i>${k}</i></div>`).join('')}</div><div style="height:16px"></div></div>
   <h2>Fresh plots</h2>
   <div class="recent">${recent.map((n) => `<a href="/${esc(n.name)}">${nameHtml(n.name)}</a>`).join('')}</div>
-  <h2>The 000–999 cemetery</h2>
+  <h2>The 000–999 graveyard</h2>
   <div class="card">
     <div class="grid3">${s.three.map((t, i) => { const l = String(i).padStart(3, '0'); return t ? `<a class="t" href="/${t}" title="${t} — taken"></a>` : `<a href="/?q=${l}" title="${l} — free"></a>`; }).join('')}</div>
     <div class="legend"><span><i style="background:var(--pink)"></i>taken (${takenThree})</span><span><i style="background:#1b1b24"></i>free (${1000 - takenThree})</span><span>tap a square</span></div>
