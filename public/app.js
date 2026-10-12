@@ -90,7 +90,15 @@ function home() {
   <div class="card">
     <div class="grid3">${s.three.map((t, i) => { const l = String(i).padStart(3, '0'); return t ? `<a class="t" href="/${t}" title="${t} — taken"></a>` : `<a href="/?q=${l}" title="${l} — free"></a>`; }).join('')}</div>
     <div class="legend"><span><i style="background:var(--pink)"></i>taken (${takenThree})</span><span><i style="background:#1b1b24"></i>free (${1000 - takenThree})</span><span>tap a square</span></div>
-  </div>` : `<h2>The register</h2><div class="empty">The name list is unavailable on this server.${indexed == null ? '' : ` The index reports ${indexed} names.`} This is not an empty registry, and it is not a list of free names.</div>`}`;
+  </div>` : `<h2>The register</h2><div class="empty">The name list is unavailable on this server.${indexed == null ? '' : ` The index reports ${indexed} names.`} This is not an empty registry, and it is not a list of free names.</div>`}
+  <h2>Secure your .naka name</h2>
+  <div class="secure">
+    <p>Found a name that's available? Claim it through the <a class="vault" href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a>.</p>
+    <p>Names are registered on Bitcoin, and the first valid inscription secures the name.</p>
+    <p>Availability can change until registration is confirmed.</p>
+    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener">Get a Name →</a></p>
+    <p class="url"><a href="${VAULT}" target="_blank" rel="noopener">ord-dropz.xyz/wallet</a></p>
+  </div>`;
   const f = $('#f'), inp = $('#q');
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
   document.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { inp.value = b.dataset.q; run(b.dataset.q); });
@@ -146,7 +154,7 @@ function renderCheck(r) {
   const opts = r.options.map((o) => `<span class="pill ok">${esc(o)}</span>`).join(' ');
   return `<div class="result free"><p class="verdict">Free</p><p class="sub"><b>${esc(r.label)}</b> is unclaimed as of block ${r.height ?? '?'}. Vacancy in the plot. Pick one ending; the other gets locked with it.</p>
     <div class="chips" style="margin:0">${opts}</div>
-    <p class="note">Register it in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.${r.mintAgrees === true ? ' The mint server agrees.' : ''}</p></div>`;
+    <p class="note">Register it in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.</p></div>`;
 }
 
 // ---------- directory ----------
