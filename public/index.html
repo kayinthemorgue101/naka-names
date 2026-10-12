@@ -3,11 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#101011">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050507">
 <title>NAMES.NAKA — The Shielded Name Directory</title>
-<meta name="description" content="Your name. Your identity. Check and browse public .naka and .shield names on Bitcoin. Built on Shielded. Powered by Ord Dropz.">
-<meta name="application-name" content="NAMES.NAKA">
+<meta name="description" content="Your name. Your identity. Check, browse and look up .naka and .shield shielded names on Bitcoin. Built on Shielded. Powered by Ord Dropz.">
 <link rel="canonical" href="https://naka-names.onrender.com/">
 <meta property="og:title" content="NAMES.NAKA — The Shielded Name Directory">
 <meta property="og:description" content="Your name. Your identity. Check and browse public .naka and .shield names. Built on Shielded. Powered by Ord Dropz.">
@@ -22,35 +20,24 @@
 <meta name="twitter:title" content="NAMES.NAKA — The Shielded Name Directory">
 <meta name="twitter:description" content="Your name. Your identity. Check and browse public .naka and .shield names. Built on Shielded. Powered by Ord Dropz.">
 <meta name="twitter:image" content="https://naka-names.onrender.com/og.png">
-<meta name="twitter:image:alt" content="NAMES.NAKA. The Shielded Name Directory. Your name. Your identity.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=6">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101011'/><path d='M16 5 6.5 9v7.2c0 6 4.3 9.6 9.5 11.1 5.2-1.5 9.5-5.1 9.5-11.1V9z' fill='none' stroke='%23a855f7' stroke-width='1.8'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css?v=8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23050507'/><path d='M16 5 6 9v7c0 6 4.5 9.5 10 11 5.5-1.5 10-5 10-11V9z' fill='none' stroke='%23a78bfa' stroke-width='2.5'/></svg>">
 </head>
 <body>
-<a class="skip" href="#app">Skip to content</a>
 <header class="top">
-  <a href="/" class="brand" data-link>
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4.5 6.5 8.6v7.4c0 6.1 4.3 9.7 9.5 11.2 5.2-1.5 9.5-5.1 9.5-11.2V8.6z" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
-    <span class="brand-name">NAMES.NAKA</span>
-  </a>
-  <nav aria-label="Primary">
-    <a href="/" data-link>Check</a>
-    <a href="/names" data-link>Directory</a>
-  </nav>
+  <a href="/" class="brand" data-link><span class="shield">⛉</span> <b>NAMES.NAKA</b><span class="dim">directory</span></a>
+  <nav><a href="/" data-link>Check</a><a href="/names" data-link>Directory</a></nav>
 </header>
-<main id="app"><p class="loading" role="status"><span class="spin" aria-hidden="true"></span> Loading the public registry…</p></main>
+<main id="app"><p class="loading">Exhuming the index…</p></main>
 <footer class="foot">
-  <p class="foot-name">NAMES.NAKA</p>
-  <p class="foot-kicker">The Shielded Name Directory</p>
-  <p class="foot-tag">Your name. Your identity.</p>
-  <p class="foot-attrib">Built on Shielded · Powered by Ord Dropz</p>
+  <p class="dim"><b style="color:var(--text);font-family:var(--disp);letter-spacing:.04em">NAMES.NAKA</b> · The Shielded Name Directory</p>
+  <p class="dim">Your name. Your identity. Built on Shielded · Powered by Ord Dropz</p>
   <p id="sync" class="dim">—</p>
-  <p class="dim">Reads the public Shielded names index through the <a href="https://ord-dropz.xyz/developers" target="_blank" rel="noopener noreferrer">Ord Dropz API</a>. Rules from <a href="https://github.com/Fl1ntstowned/shielded-ordinals/blob/main/src/v1/names.mjs" target="_blank" rel="noopener noreferrer">SHORD v1</a>. A name points at a vault. It does not show who holds that vault, or what is inside it.</p>
+  <p class="dim">Unofficial preview. Reads Bitcoin through the <a href="https://ord-dropz.xyz/developers" target="_blank" rel="noopener">Shielded Ordinals API</a>. Rules from <a href="https://github.com/Fl1ntstowned/shielded-ordinals/blob/main/src/v1/names.mjs" target="_blank" rel="noopener">SHORD v1</a>. A name points at a vault; it proves nothing about who holds it.</p>
 </footer>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="/app.js?v=6" type="module"></script>
+<script src="/app.js?v=7" type="module"></script>
 </body>
 </html>

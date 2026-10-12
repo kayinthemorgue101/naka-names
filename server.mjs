@@ -136,7 +136,7 @@ const pub = (n) => n && ({ name: n.name, label: n.name.split('.')[0], ending: n.
 async function check(q) {
   const c = classify(q);
   if (!c.ok) return { status: 'invalid', input: q, label: c.label ?? '', reason: c.reason, verified: state.verified };
-  if (c.reserved) return { status: 'reserved', input: q, label: c.label, reason: 'On the protocol reserved list. Nobody can register it, under either ending.', verified: state.verified };
+  if (c.reserved) return { status: 'reserved', input: q, label: c.label, reason: 'On the protocol’s reserved list (it would pass for the platform, the protocol or a wallet). Nobody can take it, under either ending.', verified: state.verified };
   const holder = byLabel.get(c.label);
   const asked = c.ending ? `${c.label}.${c.ending}` : null;
   if (holder) {

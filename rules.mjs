@@ -19,20 +19,20 @@ export const isShieldedAddress = (a) => typeof a === 'string' && ADDRESS_RE.test
 /** Human input ("Kayy", "kayy.shield", " OBI.NAKA ") -> { ok, label, ending|null, reason? } */
 export function classify(input) {
   let s = String(input ?? '').trim().toLowerCase();
-  if (!s) return { ok: false, reason: 'Enter a name to check.' };
+  if (!s) return { ok: false, reason: 'Type something first. Even the dead have names.' };
   let ending = null;
   const dot = s.lastIndexOf('.');
   if (dot >= 0) {
     const end = s.slice(dot + 1), lab = s.slice(0, dot);
-    if (!NAME_ENDINGS.includes(end)) return { ok: false, label: lab, reason: `“.${end}” is not an ending here. Only .naka or .shield.` };
+    if (!NAME_ENDINGS.includes(end)) return { ok: false, label: lab, reason: `“.${end}” isn't an ending here. Only .naka or .shield.` };
     ending = end; s = lab;
   }
-  if (s.includes('.')) return { ok: false, label: s, reason: 'Use one dot, before the ending.' };
-  if (/\s/.test(s)) return { ok: false, label: s, reason: 'No spaces. A label is a single word.' };
+  if (s.includes('.')) return { ok: false, label: s, reason: 'One dot only, before the ending.' };
+  if (/\s/.test(s)) return { ok: false, label: s, reason: 'No spaces. Names are one word, like a headstone with a tight budget.' };
   if (s.length < 3) return { ok: false, label: s, reason: 'At least 3 characters.' };
   if (s.length > 20) return { ok: false, label: s, reason: `At most 20 characters (that's ${s.length}).` };
-  if (!/^[a-z0-9-]+$/.test(s)) return { ok: false, label: s, reason: 'Letters a–z, numbers, and dashes only.' };
-  if (s.startsWith('-') || s.endsWith('-') || s.includes('--')) return { ok: false, label: s, reason: 'A dash goes between characters, one at a time. Not at the ends, and not doubled.' };
+  if (!/^[a-z0-9-]+$/.test(s)) return { ok: false, label: s, reason: 'Letters a–z, numbers and dashes only. No emoji, no accents, no flourishes.' };
+  if (s.startsWith('-') || s.endsWith('-') || s.includes('--')) return { ok: false, label: s, reason: 'A dash goes between characters, one at a time. Not at the ends, never doubled.' };
   if (!parseName(`${s}.naka`)) return { ok: false, label: s, reason: 'Not a valid name.' }; // belt and braces
   if (RESERVED_LABELS.has(s)) return { ok: true, reserved: true, label: s, ending };
   return { ok: true, label: s, ending };
