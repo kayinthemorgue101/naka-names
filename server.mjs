@@ -257,6 +257,7 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { address: a, names: (byAddr.get(a) ?? []).map(pub) });
     }
     if (p === '/api/blocks') return send(res, 200, await blocksInfo());
+    if (p === '/secure') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'secure.html')).pipe(res); }
     if (p === '/blocks') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'blocks.html')).pipe(res); }
     if (p === '/api/health') return send(res, 200, { ok: true, names: state.names.length, height: state.info?.height, keyedUnitsThisRun: keyedUnits });
     // static, else the SPA shell (/, /names, /obi.naka, /shord1…)
