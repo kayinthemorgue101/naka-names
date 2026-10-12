@@ -398,13 +398,16 @@ function draw() {
   const checkLink = F.q
     ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}” in the name checker.</a>`
     : '';
+  const emptyMsg = !DATA.names.length
+    ? `The name list is not loaded on this server.${checkLink} An empty directory is not a list of available names.`
+    : `No registered names match this search.${checkLink} A missing row is not proof that a name is available.`;
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
     <td class="rk" data-label="Rank">#${n.rank}</td>
     <td class="nm" data-label="Name"><a href="/${esc(n.name)}">${nameHtml(n.name)}</a> <button type="button" class="copy" data-copy="${esc(n.name)}" data-kind="name">Copy</button></td>
     <td data-label="Block"><a href="${blockUrl(n.height)}" target="_blank" rel="noopener noreferrer" title="${esc(fmtDate(n.time) ?? '')}">${n.height}</a></td>
     <td class="hide-m" data-label="Inscription"><a href="${insc(n.id)}" target="_blank" rel="noopener noreferrer">${esc(n.id.slice(0, 8))}…</a></td>
     <td data-label="Points at"><button type="button" class="copy" data-copy="${esc(n.to)}" data-kind="address" title="${esc(n.to)}"><span class="hide-m">${esc(n.to.slice(6, 12))}</span>…${esc(n.to.slice(-4))}</button></td></tr>`).join('')
-    : `<tr><td colspan="5"><div class="empty">No registered names match this search.${checkLink} A missing row is not proof that a name is available.</div></td></tr>`;
+    : `<tr><td colspan="5"><div class="empty">${emptyMsg}</div></td></tr>`;
 }
 
 async function namePage(seg) {
