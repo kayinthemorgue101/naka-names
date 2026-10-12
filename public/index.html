@@ -26,6 +26,38 @@
   <p class="mark-note">Independent community project · Not officially affiliated with Ord Dropz <span class="yet">(yet 😉)</span></p>
 </footer>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="/app.js?v=14" type="module"></script>
+<script>
+function nakaAnalytics(_type, payload) {
+  function redact(value, keepOrigin) {
+    const raw = String(value);
+    const u = new URL(raw, location.origin);
+    let path = u.pathname.replace(/\/+$/, '') || '/';
+    const seg = decodeURIComponent(path.slice(1)).toLowerCase();
+    if (/^[^/]+\.(naka|shield)$/.test(seg)) path = '/name';
+    else if (/^shord1[0-9a-f]{128}$/.test(seg)) path = '/address';
+    if (keepOrigin || /^https?:\/\//i.test(raw)) {
+      u.pathname = path;
+      u.search = '';
+      u.hash = '';
+      return u.origin + u.pathname;
+    }
+    return path;
+  }
+  try {
+    if (!payload || typeof payload !== 'object') return payload;
+    if (payload.url) payload.url = redact(payload.url, true);
+    if (payload.referrer) payload.referrer = redact(payload.referrer, false);
+    if (payload.data) delete payload.data;
+    const path = payload.url ? new URL(payload.url, location.origin).pathname : '';
+    if (path === '/name') payload.title = 'Name — .naka registry';
+    else if (path === '/address') payload.title = 'Address — .naka registry';
+    return payload;
+  } catch {
+    return false;
+  }
+}
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="d611636e-299b-4075-ab7a-861c79078815" data-domains="naka-names.onrender.com" data-exclude-search="true" data-before-send="nakaAnalytics"></script>
+<script src="/app.js?v=15" type="module"></script>
 </body>
 </html>
