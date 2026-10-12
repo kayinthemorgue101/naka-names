@@ -11,9 +11,22 @@ const VAULT = 'https://ord-dropz.xyz/wallet';
 let DATA = null;
 let checkSeq = 0;
 
+function track(name) {
+  try {
+    const fn = window.umami && window.umami.track;
+    if (typeof fn === 'function') fn(name);
+  } catch {}
+}
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1400); }
 async function copy(text) { try { await navigator.clipboard.writeText(text); } catch { const ta = Object.assign(document.createElement('textarea'), { value: text }); document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast('Copied. Handle with care.'); }
 document.addEventListener('click', (e) => {
+  const vault = e.target.closest('a[href]');
+  if (vault) {
+    try {
+      const u = new URL(vault.href, location.origin);
+      if (u.origin === 'https://ord-dropz.xyz' && u.pathname.replace(/\/+$/, '') === '/wallet') track('vault-click');
+    } catch {}
+  }
   const c = e.target.closest('[data-copy]'); if (c) { e.preventDefault(); copy(c.dataset.copy); return; }
   const a = e.target.closest('a[data-link], a[href^="/"]');
   if (a && !a.target && a.origin === location.origin && !e.metaKey && !e.ctrlKey) { e.preventDefault(); go(a.getAttribute('href')); }
@@ -110,6 +123,7 @@ async function run(q) {
   const seq = ++checkSeq;
   history.replaceState(null, '', q ? `/?q=${encodeURIComponent(q)}` : '/');
   if (!q) { res.innerHTML = ''; return; }
+  track('name-check');
   res.innerHTML = `<div class="result"><p class="dim">Checking the register…</p></div>`;
   try {
     const r = await (await fetch(`/api/check?q=${encodeURIComponent(q)}`)).json();
