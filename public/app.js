@@ -68,7 +68,7 @@ function home() {
   const dash = (n) => unavailable ? '—' : n;
   app.innerHTML = `
   <h1>Claim a name<br>before <em>someone else</em> does.</h1>
-  <p class="lede">Check any <b>.naka</b> / <b>.shield</b> label against every name on Bitcoin. First inscription wins, forever. There is no expiry and no appeal.</p>
+  <p class="lede">Discover your name in the world of Shielded Ordinals on Bitcoin.</p>
   <form class="check" id="f" autocomplete="off">
     <label class="inwrap"><input id="q" name="q" placeholder="yourname(.naka)" value="${esc(q)}" spellcheck="false" autocapitalize="none" autocorrect="off" enterkeyhint="search" maxlength="40" aria-label="Name to check"><span class="suf">.naka / .shield</span></label>
     <button>Check</button>
