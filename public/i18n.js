@@ -162,7 +162,7 @@
     'bp.source': '来源', 'bp.checked': '{src} · 查询于 {t}',
     'bp.what': '这是什么',
     'bp.p1': '{t} 是 $SHNAKAS 奖励的<b>已公布起始区块</b>。来源：<a href="https://x.com/Ob1_Wan_Satoshi" target="_blank" rel="noopener">@Ob1_Wan_Satoshi</a> 在 X 上的帖子（“START BLOCK 👉 971,700”）。',
-    'bp.p2': '它<b>尚未</b>在 Ord Dropz 官方页面上确认；质押页面称将很快恢复上线。官方消息请查看 <a href="https://ord-dropz.xyz/rewards" target="_blank" rel="noopener">ord-dropz.xyz/rewards</a>。',
+    'bp.p2': '它<b>尚未</b>在 Ord Dropz 官方页面上确认；根据项目方的帖子，奖励将直接在 <a href="https://ord-dropz.xyz/wallet" target="_blank" rel="noopener">Shielded Vault（护盾金库）</a>（ord-dropz.xyz/wallet）中领取。',
     'bp.p3': '到达该区块并不会开启任何东西。奖励取决于 Ord Dropz 和 Shielded Vault。本页只负责数区块。',
     'bp.note': '高度数据来自 mempool.space（备用 blockstream.info），本服务器缓存约 60 秒。剩余时间按每块约 10 分钟估算，仅供参考。'
   };
