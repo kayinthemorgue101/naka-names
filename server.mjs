@@ -164,6 +164,13 @@ async function check(q) {
   };
 }
 
+function listState() {
+  if (state.names.length && state.verified) return 'ready';
+  if (state.names.length) return 'stale';
+  if (state.verified && state.info?.count === 0) return 'empty';
+  return 'unavailable';
+}
+
 function stats() {
   const n = state.names, per = {}, len = {};
   for (const x of n) { const [l, e] = x.name.split('.'); per[e] = (per[e] || 0) + 1; len[l.length] = (len[l.length] || 0) + 1; }
@@ -206,7 +213,7 @@ const server = http.createServer(async (req, res) => {
     const p = decodeURIComponent(u.pathname);
     if (p === '/api/names') {
       const registration = await registrationInfo();
-      return send(res, 200, { info: state.info, verified: state.verified, lastPollAt: state.lastPollAt, lastPollOk: state.lastPollOk, names: state.names.map(pub), stats: stats(), registration });
+      return send(res, 200, { info: state.info, verified: state.verified, list: listState(), lastPollAt: state.lastPollAt, lastPollOk: state.lastPollOk, names: state.names.map(pub), stats: stats(), registration });
     }
     if (p === '/api/check') return send(res, 200, await check(u.searchParams.get('q') ?? ''));
     if (p.startsWith('/api/name/')) {

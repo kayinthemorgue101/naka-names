@@ -47,14 +47,25 @@ async function route() {
 
 // ---------- check ----------
 const EXAMPLES = ['degen', 'punks', 'crypt', 'sats', 'pepe', 'ordinal'];
+function listMode() {
+  if (DATA.list === 'ready' || DATA.list === 'stale' || DATA.list === 'empty' || DATA.list === 'unavailable') return DATA.list;
+  if (DATA.names.length && DATA.verified) return 'ready';
+  if (DATA.names.length) return 'stale';
+  if (DATA.verified && DATA.info?.count === 0) return 'empty';
+  return 'unavailable';
+}
 function home() {
   nav('/');
   const s = DATA.stats, q = new URLSearchParams(location.search).get('q') ?? '';
+  const mode = listMode();
+  const unavailable = mode === 'unavailable';
   const lens = Object.entries(s.lengths).map(([k, v]) => [Number(k), v]).sort((a, b) => a[0] - b[0]);
   const max = Math.max(1, ...lens.map((x) => x[1]));
   const takenThree = s.three.filter(Boolean).length;
   const recent = [...DATA.names].reverse().slice(0, 12);
-  const showIndex = DATA.verified || DATA.names.length > 0;
+  const showIndex = mode === 'ready' || mode === 'stale' || mode === 'empty';
+  const indexed = Number.isFinite(DATA.info?.count) ? DATA.info.count : null;
+  const dash = (n) => unavailable ? '—' : n;
   app.innerHTML = `
   <h1>Claim a name<br>before <em>someone else</em> does.</h1>
   <p class="lede">Check any <b>.naka</b> / <b>.shield</b> label against every name on Bitcoin. First inscription wins, forever. There is no expiry and no appeal.</p>
@@ -65,10 +76,10 @@ function home() {
   <div class="chips">${EXAMPLES.map((c) => `<button type="button" data-q="${c}">${c}</button>`).join('')}</div>
   <div id="res" aria-live="polite"></div>
   <div class="stats">
-    <div class="stat"><b>${s.total}</b><span>names claimed</span></div>
-    <div class="stat"><b>${s.perEnding.naka ?? 0}</b><span>.naka</span></div>
-    <div class="stat"><b>${s.perEnding.shield ?? 0}</b><span>.shield</span></div>
-    <div class="stat"><b>${takenThree}<small class="dim" style="font-size:12px">/1000</small></b><span>3-digit taken</span></div>
+    <div class="stat"><b>${dash(s.total)}</b><span>names claimed</span></div>
+    <div class="stat"><b>${dash(s.perEnding.naka ?? 0)}</b><span>.naka</span></div>
+    <div class="stat"><b>${dash(s.perEnding.shield ?? 0)}</b><span>.shield</span></div>
+    <div class="stat"><b>${unavailable ? '—' : `${takenThree}<small class="dim" style="font-size:12px">/1000</small>`}</b><span>3-digit taken</span></div>
   </div>
   ${showIndex ? `
   <h2>Label length</h2>
@@ -79,7 +90,7 @@ function home() {
   <div class="card">
     <div class="grid3">${s.three.map((t, i) => { const l = String(i).padStart(3, '0'); return t ? `<a class="t" href="/${t}" title="${t} — taken"></a>` : `<a href="/?q=${l}" title="${l} — free"></a>`; }).join('')}</div>
     <div class="legend"><span><i style="background:var(--pink)"></i>taken (${takenThree})</span><span><i style="background:#1b1b24"></i>free (${1000 - takenThree})</span><span>tap a square</span></div>
-  </div>` : `<h2>The register</h2><div class="empty">The name list is not verified on this load, so the chart and the 000–999 map stay hidden. An empty list is not a list of free names.</div>`}`;
+  </div>` : `<h2>The register</h2><div class="empty">The name list is unavailable on this server.${indexed == null ? '' : ` The index reports ${indexed} names.`} This is not an empty registry, and it is not a list of free names.</div>`}`;
   const f = $('#f'), inp = $('#q');
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
   document.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { inp.value = b.dataset.q; run(b.dataset.q); });
@@ -193,11 +204,15 @@ function draw() {
   const s = { first: (a, b) => a.rank - b.rank, last: (a, b) => b.rank - a.rank, az: (a, b) => a.name.localeCompare(b.name), short: (a, b) => a.label.length - b.label.length || a.name.localeCompare(b.name) }[F.sort] ?? ((a, b) => a.rank - b.rank);
   L.sort(s);
   syncSeg();
-  $('#cnt').textContent = `${L.length} of ${DATA.names.length} names`;
+  const mode = listMode();
+  const indexed = Number.isFinite(DATA.info?.count) ? DATA.info.count : null;
+  $('#cnt').textContent = mode === 'unavailable'
+    ? (indexed == null ? 'Name list unavailable' : `Name list unavailable · index reports ${indexed} names`)
+    : `${L.length} of ${DATA.names.length} names`;
   const label = F.q.replace(/\.(naka|shield)$/, '');
   const free = DATA.verified && F.q && /^[a-z0-9-]{3,20}$/.test(label) && !DATA.names.some((n) => n.label === label);
-  const empty = !DATA.names.length
-    ? `The name list is not loaded on this server.${F.q ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}”.</a>` : ''} An empty registry is not a list of free names.`
+  const empty = mode === 'unavailable'
+    ? `The name list is unavailable on this server.${F.q ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}”.</a>` : ''} This is not an empty registry.`
     : `No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}`;
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
     <td class="rk">#${n.rank}</td>
