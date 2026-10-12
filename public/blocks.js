@@ -66,7 +66,7 @@ async function page(el) {
   <h2>${tr('bp.what', 'What this is')}</h2>
   <div class="card">
     <p style="margin-top:0">${tr('bp.p1', `${fmt(TARGET)} is the <b>announced start block</b> for $SHNAKAS rewards. Source: a post on X by <a href="https://x.com/Ob1_Wan_Satoshi" target="_blank" rel="noopener">@Ob1_Wan_Satoshi</a> (“START BLOCK 👉 971,700”).`, { t: fmt(TARGET) })}</p>
-    <p>${tr('bp.p2', 'It is <b>not confirmed</b> on the official Ord Dropz pages; the staking page says it will be back online soon. Check <a href="https://ord-dropz.xyz/rewards" target="_blank" rel="noopener">ord-dropz.xyz/rewards</a> for the official word.')}</p>
+    <p>${tr('bp.p2', 'It is <b>not confirmed</b> on the official Ord Dropz pages; per the project\'s posts, rewards will be claimed directly in the <a href="https://ord-dropz.xyz/wallet" target="_blank" rel="noopener">Shielded Vault</a> (ord-dropz.xyz/wallet).')}</p>
     <p style="margin-bottom:0">${tr('bp.p3', 'Reaching the block does not switch anything on. Rewards depend on Ord Dropz and the Shielded Vault. This page only counts blocks.')}</p>
   </div>
   <p class="note">${tr('bp.note', 'Height from mempool.space (fallback blockstream.info), cached ~60s on this server. Time remaining assumes ~10 minutes per block and is an estimate.')}</p>`;
