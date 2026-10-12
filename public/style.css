@@ -68,9 +68,7 @@ td.nm a{color:var(--text);font-weight:700}td.nm a span{color:var(--pink)}td.nm a
 .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.recent a{border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--text);font-size:13px;background:var(--panel)}
 .recent a:hover{border-color:var(--pink);text-decoration:none}
 @media (max-width:640px){
-  main{padding:16px 12px 30px}.top{padding:12px;gap:8px}
-  .brand{font-size:14px;letter-spacing:.02em;min-width:0}.brand .dim{display:none}
-  nav{flex:none}nav a{padding:6px 8px}
+  main{padding:16px 12px 30px}.top{padding:12px}
   .stats{grid-template-columns:repeat(2,1fr)}
   .grid3{grid-template-columns:repeat(25,1fr)}
   .filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}
@@ -92,10 +90,3 @@ b.rank{color:var(--pink)}
 .seg button.on{background:var(--pink);color:#09090c;box-shadow:0 0 18px #a78bfa33}
 .seg button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 @media (max-width:640px){.seg{grid-template-columns:1fr 1fr;gap:6px}.seg button{min-height:52px;font-size:12.5px;white-space:normal;line-height:1.2}}
-
-a.btn{display:inline-flex;align-items:center;text-decoration:none}
-a.btn:hover{text-decoration:none;filter:brightness(1.1)}
-.links{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.card p{margin:.45em 0}
-.card ul{margin:.4em 0 .6em;padding-left:1.15em}
-.record{margin:8px 0;padding:10px;background:#050507;border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere;white-space:pre-wrap;font:12.5px/1.45 var(--mono)}

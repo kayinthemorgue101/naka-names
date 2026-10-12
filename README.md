@@ -1,8 +1,6 @@
-# NAMES.NAKA — The Shielded Name Directory
+# .naka registry (local preview)
 
-Your name. Your identity. Built on Shielded. Powered by Ord Dropz.
-
-The public site stays at https://naka-names.onrender.com/. `NAMES.NAKA` is the brand, not a DNS name, unless name resolution is configured separately.
+The public site stays at https://naka-names.onrender.com/.
 
 ## Publish
 Merging to `main` does not happen from this branch by itself. To publish after review:

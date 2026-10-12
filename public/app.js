@@ -6,13 +6,8 @@ const short = (a) => a ? `${a.slice(0, 10)}…${a.slice(-6)}` : '';
 const insc = (id) => `https://ordinals.com/inscription/${id}`;
 const blockUrl = (h) => `https://mempool.space/block/${h}`;
 const fmtDate = (t) => t ? new Date(t * 1000).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
-const fmtSats = (n) => `${Number(n).toLocaleString('en-US')} sats`;
 const nameHtml = (full) => { const [l, e] = full.split('.'); return `${esc(l)}<span class="${e === 'shield' ? 'sh' : ''}">.${esc(e)}</span>`; };
 const VAULT = 'https://ord-dropz.xyz/wallet';
-const DROPZ = 'https://ord-dropz.xyz/';
-const DEVS = 'https://ord-dropz.xyz/developers';
-const PROTOCOL = 'https://github.com/Fl1ntstowned/shielded-ordinals';
-const NAMES_SRC = 'https://github.com/Fl1ntstowned/shielded-ordinals/blob/main/src/v1/names.mjs';
 let DATA = null;
 let checkSeq = 0;
 
@@ -25,10 +20,6 @@ document.addEventListener('click', (e) => {
 });
 window.addEventListener('popstate', () => route());
 function go(href) { history.pushState(null, '', href); route(); window.scrollTo(0, 0); }
-function ext(href, text, cls) {
-  return `<a class="${cls || ''}" href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
-}
-
 async function load(force) {
   if (DATA && !force) return DATA;
   const r = await fetch('/api/names');
@@ -45,7 +36,7 @@ function nav(which) { document.querySelectorAll('nav a').forEach((a) => a.classL
 
 async function route() {
   const p = decodeURIComponent(location.pathname).replace(/\/+$/, '') || '/';
-  document.title = p === '/names' ? 'Directory — NAMES.NAKA' : 'NAMES.NAKA — The Shielded Name Directory';
+  document.title = p === '/names' ? 'The register — .naka registry' : '.naka registry — names of the shielded';
   await load();
   if (p === '/') return home();
   if (p === '/names') return directory();
@@ -88,60 +79,11 @@ function home() {
   <div class="card">
     <div class="grid3">${s.three.map((t, i) => { const l = String(i).padStart(3, '0'); return t ? `<a class="t" href="/${t}" title="${t} — taken"></a>` : `<a href="/?q=${l}" title="${l} — free"></a>`; }).join('')}</div>
     <div class="legend"><span><i style="background:var(--pink)"></i>taken (${takenThree})</span><span><i style="background:#1b1b24"></i>free (${1000 - takenThree})</span><span>tap a square</span></div>
-  </div>` : `<h2>The register</h2><div class="empty">The name list is not verified on this load, so the chart and the 000–999 map stay hidden. An empty list is not a list of free names.</div>`}
-  <h2>Shielded</h2>
-  <div class="links">
-    ${ext(VAULT, 'Open Shielded Vault', 'btn')}
-    ${ext(DROPZ, 'Ord Dropz', 'btn ghost')}
-    ${ext(DEVS, 'Shielded Developers', 'btn ghost')}
-    ${ext(PROTOCOL, 'Shielded Protocol', 'btn ghost')}
-  </div>
-  ${secureSection()}
-  ${aboutSection()}`;
+  </div>` : `<h2>The register</h2><div class="empty">The name list is not verified on this load, so the chart and the 000–999 map stay hidden. An empty list is not a list of free names.</div>`}`;
   const f = $('#f'), inp = $('#q');
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
   document.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { inp.value = b.dataset.q; run(b.dataset.q); });
   if (q) run(q);
-}
-
-function secureSection() {
-  const reg = DATA.registration;
-  let price;
-  if (!reg) price = `<p>A current price could not be read from the Shielded Vault registration service. Open the vault and use “See the price” before you pay.</p>`;
-  else if (!reg.enabled) price = `<p>The Shielded Vault reports that <b>Get a name</b> is not open right now. A shielded address still works.</p>`;
-  else {
-    const network = Number.isFinite(reg.networkSats) ? `, plus a Bitcoin network fee of about <b>${fmtSats(reg.networkSats)}</b>` : '';
-    price = `<p>The Shielded Vault registration service currently quotes a name fee of <b>${fmtSats(reg.feeSats)}</b>${network}. Postage that stays with the name is added in the vault and is not part of this public quote. The vault shows the full total before anything is signed.</p>`;
-  }
-  return `<h2>Secure your .naka name</h2>
-  <div class="card">
-    <p>A .naka name is a public Bitcoin inscription that points at a shielded address. Registration through Ord Dropz is <b>Get a name</b> in the ${ext(VAULT, 'Shielded Vault')}. You can also inscribe the record yourself. SHORD v1 sets no protocol fee and does not require a platform signature.</p>
-    <p>Check the label here, open the vault, and choose Get a name. It shows the price before you sign. The name counts once the inscription is in a block.</p>
-    <ul>
-      <li>3–20 characters: a–z, 0–9, single dashes between characters.</li>
-      <li>Ending <b>.naka</b> or <b>.shield</b>, lowercase. One label locks both endings.</li>
-      <li>Content is <b>application/json</b> or <b>text/plain</b>, at most 400 bytes:</li>
-    </ul>
-    <pre class="record">{ "p": "shord", "op": "name", "name": "yourname.naka", "to": "shord1…" }</pre>
-    <ul>
-      <li><b>to</b> is a shielded address. Selling the inscription does not move it.</li>
-      <li>Reserved labels, including admin, shielded, satoshi, and naka, cannot be taken.</li>
-      <li>Names count from block 969800. The earliest valid inscription wins.</li>
-      <li>A name does not prove who holds the vault.</li>
-    </ul>
-    ${price}
-    <p class="dim">Rules: ${ext(NAMES_SRC, 'src/v1/names.mjs')}.</p>
-    <p>${ext(VAULT, 'Open Shielded Vault', 'btn')}</p>
-  </div>`;
-}
-
-function aboutSection() {
-  return `<h2>Built on Shielded</h2>
-  <div class="card">
-    <p>Shielded Ordinals is a Bitcoin protocol. The art of a piece is public. Who holds the piece is not published as an owner. A <b>.naka</b> or <b>.shield</b> name is separate public metadata: an inscription that points at a shielded address. Accepting a mint or a transfer does not depend on it.</p>
-    <p>This directory reads that public index: the name, the address it points at, the inscription, and the block. It does not show what a vault holds, and a name does not prove who controls the vault. Names are counted from block 969800. Two indexers at the same block with the same digest have the same names.</p>
-    <p class="dim">${ext(DEVS, 'Shielded Developers')} · ${ext(PROTOCOL, 'Shielded Protocol')}</p>
-  </div>`;
 }
 
 async function run(q) {
@@ -255,7 +197,7 @@ function draw() {
   const label = F.q.replace(/\.(naka|shield)$/, '');
   const free = DATA.verified && F.q && /^[a-z0-9-]{3,20}$/.test(label) && !DATA.names.some((n) => n.label === label);
   const empty = !DATA.names.length
-    ? `The name list is not loaded on this server.${F.q ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}”.</a>` : ''} An empty directory is not a list of free names.`
+    ? `The name list is not loaded on this server.${F.q ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}”.</a>` : ''} An empty registry is not a list of free names.`
     : `No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}`;
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
     <td class="rk">#${n.rank}</td>
@@ -279,7 +221,7 @@ async function namePage(seg) {
   const others = n.ending === 'naka' ? `${n.label}.shield` : `${n.label}.naka`;
   const rk = n.rank ?? withRank().find((x) => x.name === n.name)?.rank;
   const same = DATA.names.filter((x) => x.to === n.to && x.name !== n.name);
-  document.title = `${n.name} — NAMES.NAKA`;
+  document.title = `${n.name} — .naka registry`;
   app.innerHTML = `<p><a href="/names">← register</a></p>
   <p class="dim" style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.2em">Claimed <b class="rank">#${rk ?? '?'}</b> of ${DATA.names.length}</p>
   <div class="big">${nameHtml(n.name)}</div>
