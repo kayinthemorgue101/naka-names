@@ -229,8 +229,15 @@ async function blocksInfo() {
 // ---- http --------------------------------------------------------------
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
+// Old Render address forwards permanently to the custom domain (path + query kept).
+const OLD_HOST = 'naka-names.onrender.com', NEW_ORIGIN = 'https://naka-names.xyz';
 const server = http.createServer(async (req, res) => {
   try {
+    const host = String(req.headers.host || '').toLowerCase().split(':')[0];
+    if (host === OLD_HOST && (req.method === 'GET' || req.method === 'HEAD') && !req.url.startsWith('/api/health')) {
+      res.writeHead(301, { location: NEW_ORIGIN + req.url, 'cache-control': 'public, max-age=3600' });
+      return res.end();
+    }
     const u = new URL(req.url, 'http://x');
     const p = decodeURIComponent(u.pathname);
     if (p === '/api/names') {
