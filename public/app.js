@@ -7,7 +7,9 @@ const insc = (id) => `https://ordinals.com/inscription/${id}`;
 const blockUrl = (h) => `https://mempool.space/block/${h}`;
 const fmtDate = (t) => t ? new Date(t * 1000).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
 const nameHtml = (full) => { const [l, e] = full.split('.'); return `${esc(l)}<span class="${e === 'shield' ? 'sh' : ''}">.${esc(e)}</span>`; };
+const VAULT = 'https://ord-dropz.xyz/wallet';
 let DATA = null;
+let checkSeq = 0;
 
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1400); }
 async function copy(text) { try { await navigator.clipboard.writeText(text); } catch { const ta = Object.assign(document.createElement('textarea'), { value: text }); document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast('Copied. Handle with care.'); }
@@ -18,12 +20,14 @@ document.addEventListener('click', (e) => {
 });
 window.addEventListener('popstate', () => route());
 function go(href) { history.pushState(null, '', href); route(); window.scrollTo(0, 0); }
-
 async function load(force) {
   if (DATA && !force) return DATA;
-  const r = await fetch('/api/names'); DATA = await r.json();
+  const r = await fetch('/api/names');
+  if (!r.ok) throw new Error('registry unavailable');
+  DATA = await r.json();
   const h = DATA.info?.height;
-  $('#sync').innerHTML = `${DATA.stats.total} names · indexed to block <a href="${blockUrl(h)}" target="_blank" rel="noopener">${h ?? '?'}</a> · ${DATA.verified ? '<span style="color:var(--lime)">digest verified ✓</span>' : '<span style="color:var(--amber)">digest unverified</span>'}`;
+  const count = DATA.verified ? DATA.stats.total : (Number.isFinite(DATA.info?.count) ? DATA.info.count : DATA.stats.total);
+  $('#sync').innerHTML = `${count} names · indexed to block <a href="${blockUrl(h)}" target="_blank" rel="noopener">${h ?? '?'}</a> · ${DATA.verified ? '<span style="color:var(--lime)">digest verified ✓</span>' : '<span style="color:var(--amber)">digest unverified</span>'}`;
   return DATA;
 }
 setInterval(() => load(true).catch(() => {}), 60_000);
@@ -32,6 +36,7 @@ function nav(which) { document.querySelectorAll('nav a').forEach((a) => a.classL
 
 async function route() {
   const p = decodeURIComponent(location.pathname).replace(/\/+$/, '') || '/';
+  document.title = p === '/names' ? 'The register — .naka registry' : '.naka registry — names of the shielded';
   await load();
   if (p === '/') return home();
   if (p === '/names') return directory();
@@ -41,14 +46,26 @@ async function route() {
 }
 
 // ---------- check ----------
-const CHIPS = ['kayy', 'obi', 'satoshi', 'a', 'mortician', 'embalm', 'grave'];
+const EXAMPLES = ['degen', 'punks', 'crypt', 'sats', 'pepe', 'ordinal'];
+function listMode() {
+  if (DATA.list === 'ready' || DATA.list === 'stale' || DATA.list === 'empty' || DATA.list === 'unavailable') return DATA.list;
+  if (DATA.names.length && DATA.verified) return 'ready';
+  if (DATA.names.length) return 'stale';
+  if (DATA.verified && DATA.info?.count === 0) return 'empty';
+  return 'unavailable';
+}
 function home() {
   nav('/');
   const s = DATA.stats, q = new URLSearchParams(location.search).get('q') ?? '';
+  const mode = listMode();
+  const unavailable = mode === 'unavailable';
   const lens = Object.entries(s.lengths).map(([k, v]) => [Number(k), v]).sort((a, b) => a[0] - b[0]);
-  const max = Math.max(...lens.map((x) => x[1]));
+  const max = Math.max(1, ...lens.map((x) => x[1]));
   const takenThree = s.three.filter(Boolean).length;
   const recent = [...DATA.names].reverse().slice(0, 12);
+  const showIndex = mode === 'ready' || mode === 'stale' || mode === 'empty';
+  const indexed = Number.isFinite(DATA.info?.count) ? DATA.info.count : null;
+  const dash = (n) => unavailable ? '—' : n;
   app.innerHTML = `
   <h1>Claim a name<br>before <em>someone else</em> does.</h1>
   <p class="lede">Check any <b>.naka</b> / <b>.shield</b> label against every name on Bitcoin. First inscription wins, forever. There is no expiry and no appeal.</p>
@@ -56,14 +73,15 @@ function home() {
     <label class="inwrap"><input id="q" name="q" placeholder="yourname(.naka)" value="${esc(q)}" spellcheck="false" autocapitalize="none" autocorrect="off" enterkeyhint="search" maxlength="40" aria-label="Name to check"><span class="suf">.naka / .shield</span></label>
     <button>Check</button>
   </form>
-  <div class="chips">${CHIPS.map((c) => `<button type="button" data-q="${c}">${c}</button>`).join('')}</div>
+  <div class="chips">${EXAMPLES.map((c) => `<button type="button" data-q="${c}">${c}</button>`).join('')}</div>
   <div id="res" aria-live="polite"></div>
   <div class="stats">
-    <div class="stat"><b>${s.total}</b><span>names claimed</span></div>
-    <div class="stat"><b>${s.perEnding.naka ?? 0}</b><span>.naka</span></div>
-    <div class="stat"><b>${s.perEnding.shield ?? 0}</b><span>.shield</span></div>
-    <div class="stat"><b>${takenThree}<small class="dim" style="font-size:12px">/1000</small></b><span>3-digit taken</span></div>
+    <div class="stat"><b>${dash(s.total)}</b><span>names claimed</span></div>
+    <div class="stat"><b>${dash(s.perEnding.naka ?? 0)}</b><span>.naka</span></div>
+    <div class="stat"><b>${dash(s.perEnding.shield ?? 0)}</b><span>.shield</span></div>
+    <div class="stat"><b>${unavailable ? '—' : `${takenThree}<small class="dim" style="font-size:12px">/1000</small>`}</b><span>3-digit taken</span></div>
   </div>
+  ${showIndex ? `
   <h2>Label length</h2>
   <div class="card"><div class="bars">${lens.map(([k, v]) => `<div style="height:${Math.max(4, (v / max) * 100)}%" title="${v} names of length ${k}"><s>${v}</s><i>${k}</i></div>`).join('')}</div><div style="height:16px"></div></div>
   <h2>Fresh plots</h2>
@@ -72,6 +90,14 @@ function home() {
   <div class="card">
     <div class="grid3">${s.three.map((t, i) => { const l = String(i).padStart(3, '0'); return t ? `<a class="t" href="/${t}" title="${t} — taken"></a>` : `<a href="/?q=${l}" title="${l} — free"></a>`; }).join('')}</div>
     <div class="legend"><span><i style="background:var(--pink)"></i>taken (${takenThree})</span><span><i style="background:#1b1b24"></i>free (${1000 - takenThree})</span><span>tap a square</span></div>
+  </div>` : `<h2>The register</h2><div class="empty">The name list is unavailable on this server.${indexed == null ? '' : ` The index reports ${indexed} names.`} This is not an empty registry, and it is not a list of free names.</div>`}
+  <h2>Secure your .naka name</h2>
+  <div class="secure">
+    <p>Found a name that's available? Claim it through the <a class="vault" href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a>.</p>
+    <p>Names are registered on Bitcoin, and the first valid inscription secures the name.</p>
+    <p>Availability can change until registration is confirmed.</p>
+    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener">Get a Name →</a></p>
+    <p class="url"><a href="${VAULT}" target="_blank" rel="noopener">ord-dropz.xyz/wallet</a></p>
   </div>`;
   const f = $('#f'), inp = $('#q');
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
@@ -81,11 +107,18 @@ function home() {
 
 async function run(q) {
   q = q.trim(); const res = $('#res'); if (!res) return;
+  const seq = ++checkSeq;
   history.replaceState(null, '', q ? `/?q=${encodeURIComponent(q)}` : '/');
   if (!q) { res.innerHTML = ''; return; }
   res.innerHTML = `<div class="result"><p class="dim">Checking the register…</p></div>`;
-  const r = await (await fetch(`/api/check?q=${encodeURIComponent(q)}`)).json();
-  res.innerHTML = renderCheck(r);
+  try {
+    const r = await (await fetch(`/api/check?q=${encodeURIComponent(q)}`)).json();
+    if (seq !== checkSeq) return;
+    res.innerHTML = renderCheck(r);
+  } catch {
+    if (seq !== checkSeq) return;
+    res.innerHTML = `<div class="result invalid"><p class="verdict">Unverified</p><p class="sub">The checker did not answer. This is not a registration result.</p></div>`;
+  }
 }
 
 function renderCheck(r) {
@@ -94,11 +127,15 @@ function renderCheck(r) {
   if (r.status === 'pending') return `<div class="result pending"><p class="verdict">Pending</p><p class="sub"><b>${nameHtml(r.name)}</b> is paid for and waiting on a block. Body’s on the table; paperwork is processing.</p></div>`;
   if (r.status === 'taken') {
     const h = r.holder;
-    const lead = r.askedOtherEnding
-      ? `You asked for <b>${nameHtml(r.asked)}</b>, but the label <b>${esc(r.label)}</b> already belongs to <b>${nameHtml(h.name)}</b>. One label, one owner, across both endings.`
-      : `Already claimed, forever. No exhumation.`;
-    return `<div class="result taken"><p class="verdict">Taken</p><p class="sub">${lead}</p>
-      <div class="chips" style="margin:0 0 6px"><span class="pill" style="border-color:#ff2e8866;color:var(--text)">${nameHtml(h.name)} ✓ holds it</span>${r.blocked.map((b) => `<span class="pill x">${esc(b)}</span>`).join('')}</div>
+    const lead = !r.verified
+      ? `A cached record lists <b>${nameHtml(h.name)}</b>, but the digest is not verified. Do not treat this as confirmed.`
+      : r.askedOtherEnding
+        ? `You asked for <b>${nameHtml(r.asked)}</b>, but the label <b>${esc(r.label)}</b> already belongs to <b>${nameHtml(h.name)}</b>. One label, one owner, across both endings.`
+        : `Already claimed, forever. No exhumation.`;
+    const verdict = r.verified ? 'Taken' : 'Unverified';
+    const klass = r.verified ? 'taken' : 'reserved';
+    return `<div class="result ${klass}"><p class="verdict">${verdict}</p><p class="sub">${lead}</p>
+      <div class="chips" style="margin:0 0 6px"><span class="pill" style="border-color:#a78bfa66;color:var(--text)">${nameHtml(h.name)} ✓ holds it</span>${r.blocked.map((b) => `<span class="pill x">${esc(b)}</span>`).join('')}</div>
       <dl class="kv">
         <dt>Name</dt><dd><a href="/${esc(h.name)}">${nameHtml(h.name)}</a></dd>
         <dt>Claimed</dt><dd><a href="${blockUrl(h.height)}" target="_blank" rel="noopener">block ${h.height}</a>${h.time ? `<span class="dim">${fmtDate(h.time)}</span>` : ''}</dd>
@@ -106,14 +143,21 @@ function renderCheck(r) {
         <dt>Points at</dt><dd><a class="addr" href="/${esc(h.to)}">${short(h.to)}</a><button class="copy" data-copy="${esc(h.to)}">copy</button></dd>
       </dl></div>`;
   }
+  const confirmedFree = r.verified && r.mintAgrees === true && !r.mintConflict;
+  if (!confirmedFree) {
+    const why = r.mintConflict
+      ? `The registration service reports a record for <b>${esc(r.label)}</b> that this index does not list yet. This is not a vacancy.`
+      : `<b>${esc(r.label || r.input)}</b> is not confirmed. ${r.verified ? 'The registration service did not confirm that it is free.' : 'The registry digest is not verified on this load.'} This is not a statement that the name is free.`;
+    return `<div class="result reserved"><p class="verdict">Unverified</p><p class="sub">${why}</p>
+      <p class="note">Check again after the index verifies, or confirm in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> before you pay.</p></div>`;
+  }
   const opts = r.options.map((o) => `<span class="pill ok">${esc(o)}</span>`).join(' ');
   return `<div class="result free"><p class="verdict">Free</p><p class="sub"><b>${esc(r.label)}</b> is unclaimed as of block ${r.height ?? '?'}. Vacancy in the plot. Pick one ending; the other gets locked with it.</p>
     <div class="chips" style="margin:0">${opts}</div>
-    <p class="note">Register it in the <a href="https://ord-dropz.xyz/wallet" target="_blank" rel="noopener">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.${r.mintAgrees === true ? ' The mint server agrees.' : ''}</p></div>`;
+    <p class="note">Register it in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.</p></div>`;
 }
 
 // ---------- directory ----------
-// Claim rank (#1 = first claimed): block height, then the API's canonical index i. The server sends it; fall back to computing it.
 function withRank() {
   const L = DATA.names.map((n, k) => ({ ...n, i: n.i ?? k }));
   if (L.every((n) => n.rank)) return L;
@@ -122,12 +166,11 @@ function withRank() {
 }
 const F = { q: '', end: 'all', len: 'all', kind: 'all', sort: 'first' };
 const SORTS = ['first', 'last', 'az', 'short'];
-// The big toggle: four presets over the ending + sort filters (ending views keep first-claimed order and true overall ranks).
 const VIEWS = [['first', 'First created'], ['newest', 'Newest'], ['naka', '.naka only'], ['shield', '.shield only']];
 const VIEW_SET = { first: { end: 'all', sort: 'first' }, newest: { end: 'all', sort: 'last' }, naka: { end: 'naka', sort: 'first' }, shield: { end: 'shield', sort: 'first' } };
 const viewOf = () => F.end === 'naka' || F.end === 'shield' ? (F.sort === 'first' ? F.end : null) : F.sort === 'first' ? 'first' : F.sort === 'last' ? 'newest' : null;
 function syncSeg() { const v = viewOf(); document.querySelectorAll('#seg [data-view]').forEach((b) => { const on = b.dataset.view === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
-const SORT_ALIAS = { old: 'first', oldest: 'first', new: 'last', newest: 'last' }; // old ?sort= links keep working
+const SORT_ALIAS = { old: 'first', oldest: 'first', new: 'last', newest: 'last' };
 function directory() {
   nav('/names');
   const sp = new URLSearchParams(location.search);
@@ -169,15 +212,23 @@ function draw() {
   const s = { first: (a, b) => a.rank - b.rank, last: (a, b) => b.rank - a.rank, az: (a, b) => a.name.localeCompare(b.name), short: (a, b) => a.label.length - b.label.length || a.name.localeCompare(b.name) }[F.sort] ?? ((a, b) => a.rank - b.rank);
   L.sort(s);
   syncSeg();
-  $('#cnt').textContent = `${L.length} of ${DATA.names.length} names`;
-  const free = F.q && /^[a-z0-9-]{3,20}$/.test(F.q.replace(/\.(naka|shield)$/, '')) && !DATA.names.some((n) => n.label === F.q.replace(/\.(naka|shield)$/, ''));
+  const mode = listMode();
+  const indexed = Number.isFinite(DATA.info?.count) ? DATA.info.count : null;
+  $('#cnt').textContent = mode === 'unavailable'
+    ? (indexed == null ? 'Name list unavailable' : `Name list unavailable · index reports ${indexed} names`)
+    : `${L.length} of ${DATA.names.length} names`;
+  const label = F.q.replace(/\.(naka|shield)$/, '');
+  const free = DATA.verified && F.q && /^[a-z0-9-]{3,20}$/.test(label) && !DATA.names.some((n) => n.label === label);
+  const empty = mode === 'unavailable'
+    ? `The name list is unavailable on this server.${F.q ? ` <a href="/?q=${encodeURIComponent(F.q)}">Check “${esc(F.q)}”.</a>` : ''} This is not an empty registry.`
+    : `No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}`;
   $('#rows').innerHTML = L.length ? L.map((n) => `<tr>
     <td class="rk">#${n.rank}</td>
     <td class="nm"><a href="/${esc(n.name)}">${nameHtml(n.name)}</a></td>
     <td><a href="${blockUrl(n.height)}" target="_blank" rel="noopener" title="${esc(fmtDate(n.time) ?? '')}">${n.height}</a></td>
     <td class="hide-m"><a href="${insc(n.id)}" target="_blank" rel="noopener">${esc(n.id.slice(0, 8))}… ↗</a></td>
     <td><button class="copy" data-copy="${esc(n.to)}" title="${esc(n.to)}"><span class="hide-m">${esc(n.to.slice(6, 12))}</span>…${esc(n.to.slice(-4))} ⧉</button></td></tr>`).join('')
-    : `<tr><td colspan="5"><div class="empty">No bodies here.${free ? ` <a href="/?q=${encodeURIComponent(F.q)}">“${esc(F.q)}” looks free — check it →</a>` : ''}</div></td></tr>`;
+    : `<tr><td colspan="5"><div class="empty">${empty}</div></td></tr>`;
 }
 
 // ---------- name & address pages ----------
@@ -193,6 +244,7 @@ async function namePage(seg) {
   const others = n.ending === 'naka' ? `${n.label}.shield` : `${n.label}.naka`;
   const rk = n.rank ?? withRank().find((x) => x.name === n.name)?.rank;
   const same = DATA.names.filter((x) => x.to === n.to && x.name !== n.name);
+  document.title = `${n.name} — .naka registry`;
   app.innerHTML = `<p><a href="/names">← register</a></p>
   <p class="dim" style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.2em">Claimed <b class="rank">#${rk ?? '?'}</b> of ${DATA.names.length}</p>
   <div class="big">${nameHtml(n.name)}</div>
