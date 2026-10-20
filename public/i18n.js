@@ -39,7 +39,7 @@
     'sec.reg2': '名字注册在比特币上，第一条有效铭文即可锁定该名字。',
     'sec.avail': '在注册确认之前，可用状态随时可能变化。',
     'sec.get': '获取名字 →',
-    'sec.note': '本页用于锁定名字，<b>不</b>用于领取 $SHNAKAS 奖励。奖励起始区块请见 <a href="/blocks" target="_self">₿locks 奖励观察</a>。',
+    'sec.note': '本页用于锁定名字，<b>不</b>用于领取 $SHNAKAS 奖励。奖励起始区块请见 <a href="/halving" target="_self">₿ 减半页面（含 $SHNAKAS 质押周）</a>。',
     // home / checker
     'home.h1': '抢在<em>别人</em>之前<br>认领你的名字。',
     'home.lede': '在比特币上的 Shielded Ordinals 世界里，找到属于你的名字。',

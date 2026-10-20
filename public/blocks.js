@@ -107,7 +107,7 @@ export async function blocksCard(el) {
     el.innerHTML = `<h2>${tr('hw.h2', '₿ Halving Watch')}</h2>
     <div class="card bw">
       ${cardHtml(b)}
-      <p class="bw-links"><a href="/blocks" target="_self">${tr('bw.details', 'Details →')}</a> · <a href="${MP}" target="_blank" rel="noopener">mempool.space ↗</a> · <span class="dim">${tr('hw.caveat', 'the block reward dies again')}</span></p>
+      <p class="bw-links"><a href="/halving" target="_self">${tr('bw.details', 'Details →')}</a> · <a href="${MP}" target="_blank" rel="noopener">mempool.space ↗</a> · <span class="dim">${tr('hw.caveat', 'the block reward dies again')}</span></p>
     </div>`;
     return true;
   };
