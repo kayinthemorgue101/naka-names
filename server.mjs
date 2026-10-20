@@ -204,8 +204,9 @@ async function registrationInfo() {
   return regCache.value;
 }
 
-// ---- Bitcoin tip height for the $SHNAKAS rewards watch (public, no key, ~60s cache) ----
-const BLOCKS_TARGET = 971700;
+// ---- Bitcoin tip height for the halving watch (public, no key, ~60s cache) ----
+// Halvings every 210,000 blocks (840,000 = 2024); target is the next one after the tip (1,050,000 now).
+const HALVING_INTERVAL = 210000;
 const TIP_SOURCES = [['mempool.space', 'https://mempool.space/api/blocks/tip/height'], ['blockstream.info', 'https://blockstream.info/api/blocks/tip/height']];
 let tip = { height: null, fetchedAt: null, source: null, at: 0 };
 async function blocksInfo() {
@@ -223,7 +224,10 @@ async function blocksInfo() {
     else { stale = true; tip.at = Date.now() - 45_000; } // retry in ~15s
   }
   const h = tip.height;
-  return { height: h, target: BLOCKS_TARGET, blocksRemaining: h == null ? null : Math.max(0, BLOCKS_TARGET - h), reached: h != null && h >= BLOCKS_TARGET, fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
+  const epoch = h == null ? null : Math.floor(h / HALVING_INTERVAL);
+  const target = epoch == null ? 1050000 : (epoch + 1) * HALVING_INTERVAL;
+  const subsidy = epoch == null ? null : 50 / 2 ** epoch;
+  return { height: h, target, epochStart: target - HALVING_INTERVAL, blocksRemaining: h == null ? null : target - h, estimatedAt: h == null ? null : tip.fetchedAt + (target - h) * 600_000, estimate: '~10 min/block', subsidyBtc: subsidy, nextSubsidyBtc: subsidy == null ? null : subsidy / 2, reached: false, fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
 }
 
 // ---- http --------------------------------------------------------------
