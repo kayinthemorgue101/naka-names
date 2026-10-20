@@ -42,7 +42,7 @@ function stakeCompact(b) {
   const ms = b.avgBlockMs || 600_000;
   if (s.state === 'before') return `<p class="hv-sub sk-line">${tr('sk.c.before', `$SHNAKAS staking starts at block ${fmt(s.startBlock)} · ${fmt(s.blocksToStart)} blocks`, { b: fmt(s.startBlock), n: fmt(s.blocksToStart) })}</p>`;
   if (s.state === 'ended') return `<p class="hv-sub sk-line">${tr('sk.c.ended', `$SHNAKAS staking: all ${s.totalWeeks} weeks done`, { w: s.totalWeeks })}</p>`;
-  return `<p class="hv-sub sk-line"><b>$SHNAKAS</b> · ${tr('sk.weekof', `Week ${s.week} of ${s.totalWeeks}`, { w: s.week, t: s.totalWeeks })} · ${tr('sk.c.left', `${fmt(s.blocksLeftInWeek)} blocks left (${eta(s.blocksLeftInWeek, ms)})`, { n: fmt(s.blocksLeftInWeek), eta: eta(s.blocksLeftInWeek, ms) })}</p>
+  return `<p class="hv-sub sk-line"><b>$SHNAKAS</b> · ${tr('sk.weekof', `Week ${s.week} of ${s.totalWeeks}`, { w: s.week, t: s.totalWeeks })} · ${tr('sk.c.left', `${fmt(s.blocksLeftInWeek)} blocks left (${eta(s.blocksLeftInWeek, ms)})`, { n: fmt(s.blocksLeftInWeek), eta: eta(s.blocksLeftInWeek, ms) })} · <a href="/api/shnakas.ics" download="shnakas-claims.ics">${tr('sk.c.cal', '📅 reminders')}</a></p>
   <div class="hv-bar sk-bar sk-mini" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${(s.blocksIntoWeek / s.weekBlocks * 100).toFixed(1)}"><i style="width:${(s.blocksIntoWeek / s.weekBlocks * 100).toFixed(2)}%"></i></div>`;
 }
 function stakeSection(b) {
@@ -74,6 +74,7 @@ function stakeSection(b) {
   <div class="card bw sk">
     ${body}
     ${endLine}
+    ${s && (s.state === 'live' || s.state === 'before') ? `<p class="sk-cal"><a class="sk-cal-btn" href="/api/shnakas.ics" download="shnakas-claims.ics">${tr('sk.cal', '📅 Add claim reminders to calendar')}</a><span class="dim">${tr('sk.cal.sub', 'One reminder per remaining week end (.ics). Times are estimates; the block is the real deadline. Re-download any time to refresh the times.')}</span></p>` : ''}
     ${facts}
     <p class="hv-sub" style="margin-bottom:0">${tr('sk.note', 'Week math from the Ord Dropz vault schedule. Earnings per piece are trait-weighted, so none are shown here.')} <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener">Ord Dropz ↗</a></p>
   </div>`;
