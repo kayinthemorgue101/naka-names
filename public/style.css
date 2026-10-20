@@ -129,3 +129,7 @@ a.claim:hover{text-decoration:none;filter:brightness(1.1)}
 .hv-bar i{display:block;height:100%;background:linear-gradient(90deg,#a78bfa66,#a78bfa)}
 .hv-bar-l{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--dim);margin:0}
 .hv-sub{font-size:12.5px;color:var(--dim);margin:8px 0 0}
+.sk-bar{border-color:#b6ff3b55;background:#b6ff3b12}.sk-bar i{background:linear-gradient(90deg,#b6ff3b66,#b6ff3b)}
+.sk-mini{height:6px;margin:6px 0 0}.sk-line{margin-top:10px}
+.sk-facts{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--dim)}.sk-facts li{margin:3px 0}.sk-facts b{color:var(--text)}
+.sk .bw-row b{font-size:18px}

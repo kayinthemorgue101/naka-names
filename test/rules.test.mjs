@@ -38,3 +38,17 @@ test('the checker offers exactly those six example words', () => {
     assert.equal(src.includes(`'${old}'`), false);
   }
 });
+
+import { stakingInfo } from '../staking.mjs';
+test('SHNAKAS staking weeks', () => {
+  assert.equal(stakingInfo(971699).state, 'before');
+  assert.deepEqual([stakingInfo(971700).week, stakingInfo(971700).blocksIntoWeek, stakingInfo(971700).blocksLeftInWeek], [1, 0, 1008]);
+  assert.equal(stakingInfo(972707).week, 1);
+  assert.equal(stakingInfo(972708).week, 2);
+  assert.equal(stakingInfo(972708).weeksPaid, 1);
+  assert.equal(stakingInfo(1050323).week, 78);
+  assert.equal(stakingInfo(1050323).blocksLeftInWeek, 1);
+  assert.equal(stakingInfo(1050324).state, 'ended');
+  assert.equal(stakingInfo(0).endBlock, 1050324);
+  assert.equal(stakingInfo(null).state, 'unknown');
+});

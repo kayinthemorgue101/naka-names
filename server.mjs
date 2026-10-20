@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { classify, isShieldedAddress, RESERVED_LABELS, NAME_ENDINGS } from './rules.mjs';
 
+import { stakingInfo } from './staking.mjs';
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5188);
 // Render (and similar hosts) set RENDER=true and need 0.0.0.0; local default stays loopback-only.
@@ -223,11 +224,28 @@ async function blocksInfo() {
     if (got) tip = got;
     else { stale = true; tip.at = Date.now() - 45_000; } // retry in ~15s
   }
+  await refreshAvg();
   const h = tip.height;
   const epoch = h == null ? null : Math.floor(h / HALVING_INTERVAL);
   const target = epoch == null ? 1050000 : (epoch + 1) * HALVING_INTERVAL;
   const subsidy = epoch == null ? null : 50 / 2 ** epoch;
-  return { height: h, target, epochStart: target - HALVING_INTERVAL, blocksRemaining: h == null ? null : target - h, estimatedAt: h == null ? null : tip.fetchedAt + (target - h) * 600_000, estimate: '~10 min/block', subsidyBtc: subsidy, nextSubsidyBtc: subsidy == null ? null : subsidy / 2, reached: false, fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
+  const left = h == null ? null : target - h;
+  const avgMs = avg.ms || 600_000;
+  const at = (ms) => left == null ? null : tip.fetchedAt + left * ms;
+  const range = left == null ? null : [at(Math.min(avgMs, 600_000)), at(Math.max(avgMs, 600_000))];
+  return { height: h, target, epochStart: target - HALVING_INTERVAL, blocksRemaining: left, estimatedAt: at(600_000), estimatedRange: range, avgBlockMs: avgMs, avgSource: avg.ms ? 'mempool.space difficulty-adjustment timeAvg' : 'fallback 10 min', estimate: '~10 min/block', subsidyBtc: subsidy, nextSubsidyBtc: subsidy == null ? null : subsidy / 2, reached: false, staking: stakingInfo(h, avgMs), fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
+}
+
+// recent average block time (mempool.space, ~10 min cache); null -> fallback 10 min
+let avg = { ms: null, at: 0 };
+async function refreshAvg() {
+  if (Date.now() - avg.at < 600_000) return;
+  avg.at = Date.now() - 540_000; // on failure retry in ~1 min
+  try {
+    const r = await fetch('https://mempool.space/api/v1/difficulty-adjustment', { signal: AbortSignal.timeout(6000) });
+    const j = await r.json();
+    if (r.ok && j.timeAvg > 60_000 && j.timeAvg < 3_600_000) avg = { ms: j.timeAvg, at: Date.now() };
+  } catch {}
 }
 
 // ---- http --------------------------------------------------------------
