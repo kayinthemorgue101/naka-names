@@ -39,7 +39,7 @@
     'sec.reg2': '名字注册在比特币上，第一条有效铭文即可锁定该名字。',
     'sec.avail': '在注册确认之前，可用状态随时可能变化。',
     'sec.get': '获取名字 →',
-    'sec.note': '本页用于锁定名字，<b>不</b>用于领取 $SHNAKAS 奖励。奖励起始区块请见 <a href="/blocks" target="_self">₿locks 奖励观察</a>。',
+    'sec.note': '本页用于锁定名字，<b>不</b>用于领取 $SHNAKAS 奖励。奖励起始区块请见 <a href="/halving" target="_self">₿ 减半页面（含 $SHNAKAS 质押周）</a>。',
     // home / checker
     'home.h1': '抢在<em>别人</em>之前<br>认领你的名字。',
     'home.lede': '在比特币上的 Shielded Ordinals 世界里，找到属于你的名字。',
@@ -162,7 +162,32 @@
     'bp.remain': '剩余', 'bp.blocks': '{n} 个区块',
     'bp.source': '来源', 'bp.checked': '{src} · 查询于 {t}',
     'bp.what': '这是什么',
-    'bp.note': '高度数据来自 mempool.space（备用 blockstream.info），本服务器缓存约 60 秒。剩余时间按每块约 10 分钟估算，仅供参考。'
+    'bp.note': '高度数据来自 mempool.space（备用 blockstream.info），本服务器缓存约 60 秒。日期范围按 mempool.space 近期平均出块时间和每块 10 分钟分别估算，仅供参考。',
+    'hp.range': '预计 {r}',
+    'hp.est2': '<b>{r}</b>。较早的一端按近期平均出块时间（约 {m} 分钟）计算，较晚的一端按 10 分钟计算。<b>这只是估算</b>：实际出块时间会漂移，日期也跟着漂。',
+    // $SHNAKAS staking
+    'sk.h2': '$SHNAKAS 质押周',
+    'sk.weekof': '第 {w} 周 / 共 {t} 周',
+    'sk.paid': '已发放 {n} 周',
+    'sk.left': '本周剩余区块',
+    'sk.est': '预计（约 {m} 分钟/块）',
+    'sk.into': '第 {w} 周已过 {n} / 1,008 个区块',
+    'sk.weekend': '第 {w} 周在区块 {b} 结束。距收益结束还有 {n} 个区块。',
+    'sk.w1': '第 1 周', 'sk.overall': '全部 78 周', 'sk.w78': '第 78 周',
+    'sk.end': '收益在区块 <b>1,050,324</b> 结束（971,700 + 78 × 1,008），约在区块 1,050,000 减半之后 324 个区块（约 2 天）。',
+    'sk.f1': '每周 <b>1,008 个区块</b>，从区块 <b>971,700</b> 开始，共 78 周。',
+    'sk.f2': '每周结束后才发放该周奖励。',
+    'sk.f3': '只有在金库中<b>未挂单</b>的作品才会累积收益。',
+    'sk.f4': '无需签名，无需锁定。随时可领取。',
+    'sk.note': '周数按 Ord Dropz 金库的时间表计算。每件作品的收益按特征加权，所以这里不显示。',
+    'sk.before': '尚未开始',
+    'sk.before.sub': '第 1 周从区块 <b>{b}</b> 开始：还差 {n} 个区块（{eta}，估算）。',
+    'sk.ended': '全部 {w} 周已结束',
+    'sk.ended.sub': '收益已在区块 {b} 停止。每一周都已发放；随时可领取。',
+    'sk.allpaid': '{t} / {t} 周',
+    'sk.c.before': '$SHNAKAS 质押从区块 {b} 开始 · 还差 {n} 个区块',
+    'sk.c.ended': '$SHNAKAS 质押：全部 {w} 周已结束',
+    'sk.c.left': '剩余 {n} 个区块（{eta}）'
   };
   // English server reasons -> zh keys (exact or pattern)
   var REASONS = [

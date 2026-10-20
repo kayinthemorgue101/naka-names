@@ -1,4 +1,4 @@
-import { blocksCard } from './blocks.js';
+import { blocksCard } from './blocks.js?v=6';
 // .naka registry — client. Talks only to this server's /api/*. No keys here.
 const $ = (s, el = document) => el.querySelector(s);
 const app = $('#app');
