@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { classify, isShieldedAddress, RESERVED_LABELS, NAME_ENDINGS } from './rules.mjs';
 
-import { stakingInfo } from './staking.mjs';
+import { stakingInfo, shnakasIcs } from './staking.mjs';
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5188);
 // Render (and similar hosts) set RENDER=true and need 0.0.0.0; local default stays loopback-only.
@@ -277,6 +277,12 @@ const server = http.createServer(async (req, res) => {
       const a = p.slice(8).trim().toLowerCase();
       if (!isShieldedAddress(a)) return send(res, 400, { error: 'not a shielded address (shord1 + 128 hex)' });
       return send(res, 200, { address: a, names: (byAddr.get(a) ?? []).map(pub) });
+    }
+    if (p === '/api/shnakas.ics') {
+      const b = await blocksInfo();
+      if (b.height == null) return send(res, 503, { error: 'block height unavailable; no reminders rather than a guess' });
+      res.writeHead(200, { 'content-type': 'text/calendar; charset=utf-8', 'content-disposition': 'attachment; filename="shnakas-claims.ics"', 'cache-control': 'no-store' });
+      return res.end(shnakasIcs(b.height, b.avgBlockMs, b.fetchedAt));
     }
     if (p === '/api/blocks' || p === '/api/halving') return send(res, 200, await blocksInfo());
     if (p === '/secure') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'secure.html')).pipe(res); }

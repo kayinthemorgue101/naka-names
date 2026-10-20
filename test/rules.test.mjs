@@ -52,3 +52,19 @@ test('SHNAKAS staking weeks', () => {
   assert.equal(stakingInfo(0).endBlock, 1050324);
   assert.equal(stakingInfo(null).state, 'unknown');
 });
+
+import { shnakasIcs } from '../staking.mjs';
+test('SHNAKAS .ics reminders', () => {
+  const ics = shnakasIcs(972366, 600_000, Date.UTC(2026, 9, 20, 18, 0, 0));
+  const ev = ics.match(/BEGIN:VEVENT/g).length;
+  assert.equal(ev, 78);
+  assert.match(ics, /UID:shnakas-week-1@naka-names\.xyz/);
+  assert.match(ics, /UID:shnakas-week-78@naka-names\.xyz/);
+  assert.equal(ics.match(/BEGIN:VALARM/g).length, 78);
+  assert.ok(ics.split('\r\n').every((l) => Buffer.byteLength(l) <= 75));
+  // week 1 ends at 972,708: 342 blocks * 10 min after now
+  assert.match(ics, /DTSTART:20261023T030000Z/);
+  assert.equal(shnakasIcs(972708, 600_000).match(/BEGIN:VEVENT/g).length, 77);
+  assert.equal(shnakasIcs(1050324, 600_000).match(/BEGIN:VEVENT/g), null);
+  assert.equal(shnakasIcs(900000, 600_000).match(/BEGIN:VEVENT/g).length, 78);
+});

@@ -187,6 +187,9 @@
     'sk.allpaid': '{t} / {t} 周',
     'sk.c.before': '$SHNAKAS 质押从区块 {b} 开始 · 还差 {n} 个区块',
     'sk.c.ended': '$SHNAKAS 质押：全部 {w} 周已结束',
+    'sk.cal': '📅 把领取提醒加入日历',
+    'sk.cal.sub': '每个剩余周结束各一条提醒（.ics）。时间为估算；区块才是真正的截止点。随时重新下载即可刷新时间。',
+    'sk.c.cal': '📅 提醒',
     'sk.c.left': '剩余 {n} 个区块（{eta}）'
   };
   // English server reasons -> zh keys (exact or pattern)
