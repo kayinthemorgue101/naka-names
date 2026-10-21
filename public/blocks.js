@@ -76,7 +76,7 @@ function stakeSection(b) {
     ${endLine}
     ${s && (s.state === 'live' || s.state === 'before') ? `<p class="sk-cal"><a class="sk-cal-btn" href="/api/shnakas.ics" download="shnakas-claims.ics">${tr('sk.cal', '📅 Add claim reminders to calendar')}</a><span class="dim">${tr('sk.cal.sub', 'One reminder per remaining week end (.ics). Times are estimates; the block is the real deadline. Re-download any time to refresh the times.')}</span></p>` : ''}
     ${facts}
-    <p class="hv-sub" style="margin-bottom:0">${tr('sk.note', 'Week math from the Ord Dropz vault schedule. Earnings per piece are trait-weighted, so none are shown here.')} <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener">Ord Dropz ↗</a></p>
+    <p class="hv-sub" style="margin-bottom:0">${tr('sk.note', 'Week math from the Ord Dropz vault schedule. Earnings per piece are trait-weighted, so none are shown here.')} <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="halving" data-umami-event-label="ord-dropz-home">Ord Dropz ↗</a></p>
   </div>`;
 }
 const ago = (t) => t ? new Date(t).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }) : '—';
