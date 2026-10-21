@@ -1,4 +1,4 @@
-import { blocksCard } from './blocks.js?v=7';
+import { blocksCard } from './blocks.js?v=8';
 // .naka registry — client. Talks only to this server's /api/*. No keys here.
 const $ = (s, el = document) => el.querySelector(s);
 const app = $('#app');
@@ -118,11 +118,11 @@ function home() {
   <div class="card"><div class="bars">${lens.map(([k, v]) => `<div style="height:${Math.max(4, (v / max) * 100)}%" title="${tr('len.title', `${v} names of length ${k}`, { v, k })}"><s>${v}</s><i>${k}</i></div>`).join('')}</div><div style="height:16px"></div></div>` : `<h2>${tr('home.reg', 'The register')}</h2><div class="empty">${tr('home.unavail', `The name list is unavailable on this server.${indexed == null ? '' : ` The index reports ${indexed} names.`} This is not an empty registry, and it is not a list of free names.`, { extra: indexed == null ? '' : tr('home.unavail.n', '', { n: indexed }) })}</div>`}
   <h2>${tr('sec.h2', 'Secure your .naka name')}</h2>
   <div class="secure">
-    <p>${tr('sec.found', `Found a name that's available? Claim it through the <a class="vault" href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a>.`)}</p>
+    <p>${tr('sec.found', `Found a name that's available? Claim it through the <a class="vault" href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="shielded-vault">Shielded Vault</a>.`)}</p>
     <p>${tr('sec.reg2', 'Names are registered on Bitcoin, and the first valid inscription secures the name.')}</p>
     <p>${tr('sec.avail', 'Availability can change until registration is confirmed.')}</p>
-    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener">${tr('sec.get', 'Get a Name →')}</a></p>
-    <p class="url"><a href="${VAULT}" target="_blank" rel="noopener">ord-dropz.xyz/wallet</a></p>
+    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="get-a-name">${tr('sec.get', 'Get a Name →')}</a></p>
+    <p class="url"><a href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="wallet-url">ord-dropz.xyz/wallet</a></p>
   </div>`;
   const f = $('#f'), inp = $('#q');
   f.onsubmit = (e) => { e.preventDefault(); run(inp.value); };
@@ -176,12 +176,12 @@ function renderCheck(r) {
       ? tr('chk.conflict', `The registration service reports a record for <b>${esc(r.label)}</b> that this index does not list yet. This is not a vacancy.`, { label: esc(r.label) })
       : tr('chk.notconf', `<b>${esc(r.label || r.input)}</b> is not confirmed. ${r.verified ? 'The registration service did not confirm that it is free.' : 'The registry digest is not verified on this load.'} This is not a statement that the name is free.`, { label: esc(r.label || r.input), why: r.verified ? tr('chk.why.mint', '') : tr('chk.why.digest', '') });
     return `<div class="result reserved"><p class="verdict">${tr('chk.unv', 'Unverified')}</p><p class="sub">${why}</p>
-      <p class="note">${tr('chk.again', `Check again after the index verifies, or confirm in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> before you pay.`, { vault: VAULT })}</p></div>`;
+      <p class="note">${tr('chk.again', `Check again after the index verifies, or confirm in the <a href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="check-unverified">Shielded Vault</a> before you pay.`, { vault: VAULT })}</p></div>`;
   }
   const opts = r.options.map((o) => `<span class="pill ok">${esc(o)}</span>`).join(' ');
   return `<div class="result free"><p class="verdict">${tr('chk.free', 'Free')}</p><p class="sub">${tr('chk.free.sub', `<b>${esc(r.label)}</b> is unclaimed as of block ${r.height ?? '?'}. Vacancy in the plot. Pick one ending; the other gets locked with it.`, { label: esc(r.label), h: r.height ?? '?' })}</p>
     <div class="chips" style="margin:0">${opts}</div>
-    <p class="note">${tr('chk.free.note', `Register it in the <a href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.`, { vault: VAULT })}</p></div>`;
+    <p class="note">${tr('chk.free.note', `Register it in the <a href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="check-free">Shielded Vault</a> (“Get a name”), or inscribe the record yourself. Whoever's inscription lands first wins, so “free” here is a snapshot, not a reservation.`, { vault: VAULT })}</p></div>`;
 }
 
 // ---------- directory ----------
@@ -289,7 +289,7 @@ async function namePage(seg) {
   <h2>${tr('np.send', 'Send to a .naka name')}</h2>
   <div class="sendto">
     <p>${tr('np.send1', `Want to send a Shielded Ordinal to <b>${nameHtml(n.name)}</b>?`, { name: nameHtml(n.name) })}</p>
-    <p>${tr('np.send2', `Simply open the <a class="vault" href="${VAULT}" target="_blank" rel="noopener">Shielded Vault</a>, enter <b>${nameHtml(n.name)}</b> in the Send field, and follow the steps to complete your transfer.`, { vault: VAULT, name: nameHtml(n.name) })}</p>
+    <p>${tr('np.send2', `Simply open the <a class="vault" href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="shielded-vault">Shielded Vault</a>, enter <b>${nameHtml(n.name)}</b> in the Send field, and follow the steps to complete your transfer.`, { vault: VAULT, name: nameHtml(n.name) })}</p>
     <p>${tr('np.send3', 'Your .naka name serves as a destination for receiving Shielded Ordinals on Bitcoin.')}</p>
   </div>`;
 }

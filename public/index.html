@@ -22,8 +22,8 @@
   <p id="sync" class="dim">—</p>
   <p class="mark-name" data-i18n="foot.name">.NAKA REGISTRY</p>
   <p class="mark-built"><span data-i18n="foot.built">BUILT ON BITCOIN</span> <svg class="sym" viewBox="0 0 14 16" width="11" height="13" aria-hidden="true"><path fill="currentColor" d="M4.1 1.35V0h1.35v1.25h1.15V0h1.35v1.4c1.75.25 2.75 1.3 2.75 2.75 0 1.05-.5 1.9-1.4 2.35 1 .4 1.55 1.25 1.55 2.4 0 1.75-1.3 2.9-3.15 3.1V15H6.6v-1.2H5.45V15H4.1v-1.25H2.4V12.6h1.7V3.4H2.4V2.25h1.7V1.35zm1.35 4.7h1.75c.9 0 1.4-.4 1.4-1.1s-.5-1.1-1.4-1.1H5.45v2.2zm0 4.25h2c1 0 1.55-.45 1.55-1.2s-.55-1.2-1.55-1.2H5.45v2.4z"/></svg> <svg class="sym star" viewBox="0 0 16 16" width="8" height="8" aria-hidden="true"><path fill="currentColor" d="M8 0l1.5 6.5L16 8l-6.5 1.5L8 16 6.5 9.5 0 8l6.5-1.5z"/></svg> <span data-i18n="foot.dropz">SHIELDED BY ORD DROPZ</span></p>
-  <p class="mark-by"><span data-i18n="foot.by">Registry by</span> <a href="https://x.com/kayinthemorgue" target="_blank" rel="noopener">@kayinthemorgue</a> · <a href="https://discord.com/users/1264026988281331764" target="_blank" rel="noopener">Discord</a></p>
-  <p class="mark-dropz"><a href="https://ord-dropz.xyz/" target="_blank" rel="noopener">Ord Dropz</a> · <a href="https://discord.gg/enbnNVBc2" target="_blank" rel="noopener" data-i18n="foot.join">Join Discord</a></p>
+  <p class="mark-by"><span data-i18n="foot.by">Registry by</span> <a href="https://x.com/kayinthemorgue" target="_blank" rel="noopener">@kayinthemorgue</a> · <a href="https://discord.com/users/1264026988281331764" target="_blank" rel="noopener" data-umami-event="outbound-discord" data-umami-event-page="registry" data-umami-event-label="creator-discord">Discord</a></p>
+  <p class="mark-dropz"><a href="https://ord-dropz.xyz/" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="registry" data-umami-event-label="ord-dropz-home">Ord Dropz</a> · <a href="https://discord.gg/enbnNVBc2" target="_blank" rel="noopener" data-i18n="foot.join" data-umami-event="outbound-discord" data-umami-event-page="registry" data-umami-event-label="join-discord">Join Discord</a></p>
   <p class="mark-note"><span data-i18n="foot.note">Independent community project · Not officially affiliated with Ord Dropz</span> <span class="yet" data-i18n="foot.yet">(yet 😉)</span></p>
 </footer>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -48,7 +48,16 @@ function nakaAnalytics(_type, payload) {
     if (!payload || typeof payload !== 'object') return payload;
     if (payload.url) payload.url = redact(payload.url, true);
     if (payload.referrer) payload.referrer = redact(payload.referrer, false);
-    if (payload.data) delete payload.data;
+    if (payload.data) {
+      const d = payload.data;
+      if (typeof payload.name === 'string' && /^outbound-/.test(payload.name)) {
+        const keep = {};
+        if (d.url) keep.url = redact(d.url, true);
+        if (typeof d.page === 'string') keep.page = d.page.slice(0, 40);
+        if (typeof d.label === 'string') keep.label = d.label.slice(0, 40);
+        payload.data = keep;
+      } else delete payload.data;
+    }
     const path = payload.url ? new URL(payload.url, location.origin).pathname : '';
     if (path === '/name') payload.title = 'Name — .naka registry';
     else if (path === '/address') payload.title = 'Address — .naka registry';
@@ -57,8 +66,23 @@ function nakaAnalytics(_type, payload) {
     return false;
   }
 }
+// Outbound-click fallback for ord-dropz / Discord links that lack data-umami-event
+// (e.g. links swapped in by translations). Links with the attribute are tracked by Umami itself.
+document.addEventListener('click', function (e) {
+  try {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.hasAttribute('data-umami-event')) return;
+    const u = new URL(a.href, location.origin);
+    const h = u.hostname.replace(/^www\./, '');
+    const name = h === 'ord-dropz.xyz' ? 'outbound-ord-dropz' : (h === 'discord.gg' || h === 'discord.com') ? 'outbound-discord' : null;
+    if (!name || !window.umami || typeof window.umami.track !== 'function') return;
+    const p = location.pathname.replace(/\/+$/, '') || '/';
+    const page = p === '/' ? 'registry' : p === '/secure' ? 'secure' : p === '/halving' ? 'halving' : 'registry';
+    window.umami.track(name, { url: u.origin + u.pathname, page: page, label: (a.className || 'link').split(' ').pop() });
+  } catch (_) {}
+}, true);
 </script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="d611636e-299b-4075-ab7a-861c79078815" data-domains="naka-names.xyz,naka-names.onrender.com" data-exclude-search="true" data-before-send="nakaAnalytics"></script>
-<script src="/app.js?v=21" type="module"></script>
+<script src="/app.js?v=22" type="module"></script>
 </body>
 </html>
