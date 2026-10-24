@@ -135,3 +135,22 @@ a.claim:hover{text-decoration:none;filter:brightness(1.1)}
 .sk .bw-row b{font-size:18px}
 .sk-cal{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:12px 0 0;font-size:12px}
 .sk-cal-btn{display:inline-block;padding:7px 12px;border:1px solid #b6ff3b66;border-radius:8px;background:#b6ff3b14;color:var(--lime);text-decoration:none!important;font-size:13px;font-family:var(--mono)}.sk-cal-btn:hover{background:#b6ff3b26}
+/* NakaDAO live tally */
+.dao-tag{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 6px}
+.dao-q{font-size:clamp(18px,4.5vw,24px);text-transform:none;letter-spacing:.03em;color:var(--text);margin-top:6px}
+.dao-list{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-direction:column;gap:8px}
+.dao-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dao-row.lead{border-color:#a78bfa66;box-shadow:0 0 18px #a78bfa22}
+.dao-row.none{opacity:.75;border-style:dashed}
+.dao-rank{font:900 14px var(--disp);color:var(--dim);width:22px;text-align:center;flex:none}
+.dao-row.lead .dao-rank{color:var(--pink)}
+.dao-row img,.dao-ph{width:44px;height:44px;border-radius:8px;flex:none;object-fit:cover;image-rendering:pixelated;background:var(--panel2);border:1px solid var(--line)}
+.dao-ph{display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.dao-main{flex:1;min-width:0}
+.dao-name{margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dao-name .dim{font-size:12px}
+.dao-bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.dao-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));border-radius:99px;transition:width .6s}
+.dao-row.none .dao-bar i{background:var(--dim)}
+.dao-n{margin:0;text-align:right;flex:none;min-width:64px}.dao-n b{display:block;font:900 18px var(--disp)}.dao-n span{font-size:11px;color:var(--dim)}
+.dao-upd{font-size:12px;margin-top:14px}.dao-upd .warn{color:var(--amber)}
+.dao-credit{font-size:12px;max-width:60ch}

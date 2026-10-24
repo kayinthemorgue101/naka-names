@@ -248,6 +248,59 @@ async function refreshAvg() {
   } catch {}
 }
 
+// ---- NakaDAO live tally (Ord Dropz vote backend; public, read-only GET only; 60s cache, stale on error) ----
+const VOTE_TOPICS = 'https://backend-vote-production.up.railway.app/api/vote/topics';
+const MKT_IMG = 'https://backend-marketplace-production.up.railway.app/api/marketplace/listings';
+let dao = { body: null, fetchedAt: null, at: 0, inflight: null };
+const slimCard = (c) => c && { title: c.title ?? null, artist: c.artistName ?? null, artistSocial: c.artistSocial ?? null, price: c.price ?? null, editionSize: c.editionSize ?? null };
+function slimTopic(t) {
+  const totals = t.totals || {};
+  return {
+    id: t.id, title: t.title, titleZh: t.titleZh ?? null, blurb: t.blurb ?? null, blurbZh: t.blurbZh ?? null,
+    status: t.status, round: t.round, openedAt: t.openedAt ?? null, closesAt: t.closesAt ?? null, showTotalsLive: t.showTotalsLive !== false,
+    snapshotHeight: t.snapshot?.height ?? null, ballots: t.ballots ?? null, none: totals.none ?? 0,
+    candidates: (t.candidates || []).filter((c) => c.id !== 'none').map((c) => ({ id: c.id, listingId: c.listingId ?? null, votes: totals[c.id] ?? 0, card: slimCard(c.card) })),
+    rounds: (t.rounds || []).map((r) => ({ round: r.round, winner: r.winner ?? null, ballots: r.ballots ?? null, closedAt: r.closedAt ?? null })),
+  };
+}
+async function daoInfo() {
+  if (dao.body && Date.now() - dao.at < 60_000) return { ...dao.body, fetchedAt: dao.fetchedAt, stale: false };
+  if (!dao.inflight) dao.inflight = (async () => {
+    try {
+      const r = await fetch(VOTE_TOPICS, { signal: AbortSignal.timeout(8000) });
+      const j = await r.json();
+      if (!r.ok || !Array.isArray(j.topics)) throw new Error(`vote topics ${r.status}`);
+      dao = { ...dao, body: { topics: j.topics.map(slimTopic) }, fetchedAt: Date.now(), at: Date.now() };
+      return true;
+    } catch (e) { log('nakadao:', e.message); dao.at = Date.now() - 45_000; return false; } // retry in ~15s
+    finally { dao.inflight = null; }
+  })();
+  const ok = await dao.inflight;
+  if (!dao.body) return null;
+  return { ...dao.body, fetchedAt: dao.fetchedAt, stale: !ok };
+}
+// Image proxy: only marketplace listing image/thumbnail for a listing_<digits> id. No open proxy.
+const imgCache = new Map(); // key -> { type, buf, at }
+async function daoImg(res, kind, id) {
+  if (!/^(image|thumbnail)$/.test(kind) || !/^listing_\d{6,20}$/.test(id)) return send(res, 400, { error: 'bad image' });
+  const key = `${kind}/${id}`;
+  let c = imgCache.get(key);
+  if (!c || Date.now() - c.at > 6 * 3600_000) {
+    try {
+      const r = await fetch(`${MKT_IMG}/${kind}/${id}`, { signal: AbortSignal.timeout(10000) });
+      const type = r.headers.get('content-type') || '';
+      if (!r.ok || !/^image\//.test(type)) throw new Error(`img ${r.status} ${type}`);
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length > 5_000_000) throw new Error('img too big');
+      c = { type, buf, at: Date.now() };
+      if (imgCache.size > 200) imgCache.delete(imgCache.keys().next().value);
+      imgCache.set(key, c);
+    } catch (e) { if (!c) return send(res, 502, { error: 'image unavailable' }); }
+  }
+  res.writeHead(200, { 'content-type': c.type, 'cache-control': 'public, max-age=86400, stale-while-revalidate=604800', 'x-content-type-options': 'nosniff' });
+  res.end(c.buf);
+}
+
 // ---- http --------------------------------------------------------------
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
@@ -289,6 +342,10 @@ const server = http.createServer(async (req, res) => {
     // /halving is the page; /blocks (old name) and trailing-slash variants 301 there, query kept.
     if (/^\/(blocks\/*|halving\/+)$/.test(p)) { res.writeHead(301, { location: '/halving' + u.search, 'cache-control': 'public, max-age=3600' }); return res.end(); }
     if (p === '/halving') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'blocks.html')).pipe(res); }
+    if (p === '/api/nakadao' || p === '/api/council') { const d = await daoInfo(); return d ? send(res, 200, d) : send(res, 503, { error: 'vote tally unavailable' }); }
+    { const m = p.match(/^\/api\/nakadao\/img\/([a-z]+)\/([^/]+)$/); if (m) return daoImg(res, m[1], m[2]); }
+    if (/^\/(council|nakadao\/+)\/*$/.test(p)) { res.writeHead(301, { location: '/nakadao' + u.search, 'cache-control': 'public, max-age=3600' }); return res.end(); }
+    if (p === '/nakadao') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'nakadao.html')).pipe(res); }
     if (p === '/api/health') return send(res, 200, { ok: true, names: state.names.length, height: state.info?.height, keyedUnitsThisRun: keyedUnits });
     // static, else the SPA shell (/, /names, /obi.naka, /shord1…)
     const f = path.join(DIR, 'public', path.normalize(p).replace(/^(\.\.[/\\])+/, ''));
