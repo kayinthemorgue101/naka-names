@@ -1,4 +1,4 @@
-// NakaDAO live tally — read-only mirror of the Naka Council vote. Talks only to /api/nakadao (server caches 60s).
+// Naka Council live tally — read-only mirror of the Naka Council vote. Talks only to /api/nakadao (server caches 60s).
 const I18N = window.NAKA_I18N || { t: (_k, en) => en, onChange() {}, lang: 'en' };
 const tr = I18N.t;
 const VAULT = 'https://ord-dropz.xyz/wallet';
@@ -57,11 +57,11 @@ function topicHtml(t) {
 }
 function render() {
   if (!data) { root.innerHTML = err ? `<p class="dim">${tr('dao.err', 'Vote data is unavailable right now.')}</p>` : ''; return; }
-  root.innerHTML = `<h1><em>NakaDAO</em></h1>
+  root.innerHTML = `<h1><em>${tr('dao.h1', 'Naka Council')}</em></h1>
     ${data.topics.map(topicHtml).join('')}
     <p class="dao-upd dim"><span id="dao-ago">${ago()}</span>${data.stale || err ? ` · <span class="warn">${tr('dao.stale', 'upstream not responding, showing cached numbers')}</span>` : ''}</p>
-    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="nakadao" data-umami-event-label="go-vote">${tr('dao.go', 'Go vote in your vault →')}</a></p>
-    <p class="dim dao-credit">${tr('dao.credit', 'Tally from the Naka Council vote run by <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="nakadao" data-umami-event-label="ord-dropz-credit">Ord Dropz</a>. Read-only mirror, refreshed every 60 seconds; voting happens in the Shielded Vault.')}</p>`;
+    <p class="go"><a class="btn claim" href="${VAULT}" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="council" data-umami-event-label="go-vote">${tr('dao.go', 'Go vote in your vault →')}</a></p>
+    <p class="dim dao-credit">${tr('dao.credit', 'Tally from the Naka Council vote run by <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener" data-umami-event="outbound-ord-dropz" data-umami-event-page="council" data-umami-event-label="ord-dropz-credit">Ord Dropz</a>. Read-only mirror, refreshed every 60 seconds; voting happens in the Shielded Vault.')}</p>`;
 }
 load();
 setInterval(load, 60_000);

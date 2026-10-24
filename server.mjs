@@ -248,7 +248,7 @@ async function refreshAvg() {
   } catch {}
 }
 
-// ---- NakaDAO live tally (Ord Dropz vote backend; public, read-only GET only; 60s cache, stale on error) ----
+// ---- Naka Council live tally (Ord Dropz vote backend; public, read-only GET only; 60s cache, stale on error) ----
 const VOTE_TOPICS = 'https://backend-vote-production.up.railway.app/api/vote/topics';
 const MKT_IMG = 'https://backend-marketplace-production.up.railway.app/api/marketplace/listings';
 let dao = { body: null, fetchedAt: null, at: 0, inflight: null };
@@ -344,8 +344,8 @@ const server = http.createServer(async (req, res) => {
     if (p === '/halving') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'blocks.html')).pipe(res); }
     if (p === '/api/nakadao' || p === '/api/council') { const d = await daoInfo(); return d ? send(res, 200, d) : send(res, 503, { error: 'vote tally unavailable' }); }
     { const m = p.match(/^\/api\/nakadao\/img\/([a-z]+)\/([^/]+)$/); if (m) return daoImg(res, m[1], m[2]); }
-    if (/^\/(council|nakadao\/+)\/*$/.test(p)) { res.writeHead(301, { location: '/nakadao' + u.search, 'cache-control': 'public, max-age=3600' }); return res.end(); }
-    if (p === '/nakadao') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'nakadao.html')).pipe(res); }
+    if (/^\/(nakadao\/*|council\/+)$/.test(p)) { res.writeHead(301, { location: '/council' + u.search, 'cache-control': 'public, max-age=3600' }); return res.end(); }
+    if (p === '/council') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'nakadao.html')).pipe(res); }
     if (p === '/api/health') return send(res, 200, { ok: true, names: state.names.length, height: state.info?.height, keyedUnitsThisRun: keyedUnits });
     // static, else the SPA shell (/, /names, /obi.naka, /shord1…)
     const f = path.join(DIR, 'public', path.normalize(p).replace(/^(\.\.[/\\])+/, ''));
