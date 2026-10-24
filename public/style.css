@@ -135,7 +135,7 @@ a.claim:hover{text-decoration:none;filter:brightness(1.1)}
 .sk .bw-row b{font-size:18px}
 .sk-cal{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:12px 0 0;font-size:12px}
 .sk-cal-btn{display:inline-block;padding:7px 12px;border:1px solid #b6ff3b66;border-radius:8px;background:#b6ff3b14;color:var(--lime);text-decoration:none!important;font-size:13px;font-family:var(--mono)}.sk-cal-btn:hover{background:#b6ff3b26}
-/* NakaDAO live tally */
+/* Naka Council live tally */
 .dao-tag{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 6px}
 .dao-q{font-size:clamp(18px,4.5vw,24px);text-transform:none;letter-spacing:.03em;color:var(--text);margin-top:6px}
 .dao-list{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-direction:column;gap:8px}
