@@ -208,6 +208,7 @@ async function registrationInfo() {
 // ---- Bitcoin tip height for the halving watch (public, no key, ~60s cache) ----
 // Halvings every 210,000 blocks (840,000 = 2024); target is the next one after the tip (1,050,000 now).
 const HALVING_INTERVAL = 210000;
+const BLOCK_MS = 600_000; // all time estimates use a flat 10 min/block
 const TIP_SOURCES = [['mempool.space', 'https://mempool.space/api/blocks/tip/height'], ['blockstream.info', 'https://blockstream.info/api/blocks/tip/height']];
 let tip = { height: null, fetchedAt: null, source: null, at: 0 };
 async function blocksInfo() {
@@ -230,10 +231,10 @@ async function blocksInfo() {
   const target = epoch == null ? 1050000 : (epoch + 1) * HALVING_INTERVAL;
   const subsidy = epoch == null ? null : 50 / 2 ** epoch;
   const left = h == null ? null : target - h;
-  const avgMs = avg.ms || 600_000;
+  const avgMs = BLOCK_MS; // flat 10 min/block for all ETAs (matches Ord Dropz vault Staking page)
   const at = (ms) => left == null ? null : tip.fetchedAt + left * ms;
   const range = left == null ? null : [at(Math.min(avgMs, 600_000)), at(Math.max(avgMs, 600_000))];
-  return { height: h, target, epochStart: target - HALVING_INTERVAL, blocksRemaining: left, estimatedAt: at(600_000), estimatedRange: range, avgBlockMs: avgMs, avgSource: avg.ms ? 'mempool.space difficulty-adjustment timeAvg' : 'fallback 10 min', estimate: '~10 min/block', subsidyBtc: subsidy, nextSubsidyBtc: subsidy == null ? null : subsidy / 2, reached: false, staking: stakingInfo(h, avgMs), fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
+  return { height: h, target, epochStart: target - HALVING_INTERVAL, blocksRemaining: left, estimatedAt: at(600_000), estimatedRange: range, avgBlockMs: avgMs, avgSource: 'flat 10 min/block', measuredAvgBlockMs: avg.ms || null, estimate: '~10 min/block', subsidyBtc: subsidy, nextSubsidyBtc: subsidy == null ? null : subsidy / 2, reached: false, staking: stakingInfo(h, avgMs), fetchedAt: tip.fetchedAt, source: tip.source, stale: stale || h == null };
 }
 
 // recent average block time (mempool.space, ~10 min cache); null -> fallback 10 min
@@ -335,7 +336,7 @@ const server = http.createServer(async (req, res) => {
       const b = await blocksInfo();
       if (b.height == null) return send(res, 503, { error: 'block height unavailable; no reminders rather than a guess' });
       res.writeHead(200, { 'content-type': 'text/calendar; charset=utf-8', 'content-disposition': 'attachment; filename="shnakas-claims.ics"', 'cache-control': 'no-store' });
-      return res.end(shnakasIcs(b.height, b.avgBlockMs, b.fetchedAt));
+      return res.end(shnakasIcs(b.height, BLOCK_MS, b.fetchedAt));
     }
     if (p === '/api/blocks' || p === '/api/halving') return send(res, 200, await blocksInfo());
     if (p === '/secure') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return fs.createReadStream(path.join(DIR, 'public', 'secure.html')).pipe(res); }

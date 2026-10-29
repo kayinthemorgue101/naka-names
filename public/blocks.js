@@ -21,7 +21,7 @@ async function getBlocks() {
   if (!r.ok) throw new Error('blocks unavailable');
   return r.json();
 }
-// 'est. Mar–Apr 2028' from [early, late] ms timestamps (recent avg vs 10 min/block)
+// 'est. Mar–Apr 2028' from [early, late] ms timestamps (flat 10 min/block)
 function monthRange(r) {
   if (!r) return '—';
   const [a, b] = r.map((t) => new Date(t));
@@ -33,13 +33,12 @@ function monthRange(r) {
   else s = zh ? `${y(a)}年${mo(a)}–${y(b)}年${mo(b)}` : `${mo(a)} ${y(a)}–${mo(b)} ${y(b)}`;
   return tr('hp.range', `est. ${s}`, { r: s });
 }
-const mins = (ms) => (ms / 60_000).toFixed(1);
 const sbar = (pct, l, mid, r) => `<div class="hv-bar sk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct.toFixed(1)}"><i style="width:${pct.toFixed(2)}%"></i></div>
   <p class="hv-bar-l"><span>${l}</span><span>${mid}</span><span>${r}</span></p>`;
 function stakeCompact(b) {
   const s = b?.staking;
   if (!s || s.state === 'unknown') return '';
-  const ms = b.avgBlockMs || 600_000;
+  const ms = 600_000;
   if (s.state === 'before') return `<p class="hv-sub sk-line">${tr('sk.c.before', `$SHNAKAS staking starts at block ${fmt(s.startBlock)} · ${fmt(s.blocksToStart)} blocks`, { b: fmt(s.startBlock), n: fmt(s.blocksToStart) })}</p>`;
   if (s.state === 'ended') return `<p class="hv-sub sk-line">${tr('sk.c.ended', `$SHNAKAS staking: all ${s.totalWeeks} weeks done`, { w: s.totalWeeks })}</p>`;
   return `<p class="hv-sub sk-line"><b>$SHNAKAS</b> · ${tr('sk.weekof', `Week ${s.week} of ${s.totalWeeks}`, { w: s.week, t: s.totalWeeks })} · ${tr('sk.c.left', `${fmt(s.blocksLeftInWeek)} blocks left (${eta(s.blocksLeftInWeek, ms)})`, { n: fmt(s.blocksLeftInWeek), eta: eta(s.blocksLeftInWeek, ms) })} · <a href="/api/shnakas.ics" download="shnakas-claims.ics">${tr('sk.c.cal', '📅 reminders')}</a></p>
@@ -47,7 +46,7 @@ function stakeCompact(b) {
 }
 function stakeSection(b) {
   const s = b?.staking;
-  const ms = b?.avgBlockMs || 600_000;
+  const ms = 600_000;
   const facts = `<ul class="sk-facts">
       <li>${tr('sk.f1', `Weeks are <b>1,008 blocks</b>, starting at block <b>971,700</b>. 78 weeks total.`)}</li>
       <li>${tr('sk.f2', 'A week is paid once it is over.')}</li>
@@ -65,7 +64,7 @@ function stakeSection(b) {
   else body = `<div class="bw-row">
       <div><b>${tr('sk.weekof', `Week ${s.week} of ${s.totalWeeks}`, { w: s.week, t: s.totalWeeks })}</b><span>${tr('sk.paid', `${s.weeksPaid} paid so far`, { n: s.weeksPaid })}</span></div>
       <div><b>${fmt(s.blocksLeftInWeek)}</b><span>${tr('sk.left', 'blocks left in week')}</span></div>
-      <div><b>${eta(s.blocksLeftInWeek, ms)}</b><span>${tr('sk.est', `est. (~${mins(ms)} min/block)`, { m: mins(ms) })}</span></div>
+      <div><b>${eta(s.blocksLeftInWeek, ms)}</b><span>${tr('sk.est', 'est. (~10 min/block)')}</span></div>
     </div>
     ${sbar((s.blocksIntoWeek / s.weekBlocks) * 100, fmt(s.weekEndBlock - s.weekBlocks), tr('sk.into', `${fmt(s.blocksIntoWeek)} / 1,008 blocks into week ${s.week}`, { n: fmt(s.blocksIntoWeek), w: s.week }), fmt(s.weekEndBlock))}
     <p class="hv-sub">${tr('sk.weekend', `Week ${s.week} ends at block ${fmt(s.weekEndBlock)}. ${fmt(s.blocksToEnd)} blocks until earning ends.`, { w: s.week, b: fmt(s.weekEndBlock), n: fmt(s.blocksToEnd) })}</p>
@@ -125,7 +124,7 @@ async function page(el) {
   ${h == null ? `<div class="result invalid"><p class="verdict">${tr('bp.unavail', 'Height unavailable')}</p><p class="sub">${tr('bp.unavail.sub', 'Neither mempool.space nor blockstream.info answered. No number is shown rather than a guess.')}</p></div>` : `
   <div class="result pending">
     <p class="verdict">${tr('bp.togo', `${fmt(left)} blocks to go`, { n: fmt(left) })}</p>
-    <p class="sub">${tr('hp.est2', `<b>${monthRange(b.estimatedRange)}</b>. The early end uses the recent average block time (~${mins(b.avgBlockMs || 600_000)} min), the late end uses 10 minutes. <b>This is an estimate</b>: real block times wander, and the date drifts with them.`, { r: monthRange(b.estimatedRange), m: mins(b.avgBlockMs || 600_000) })}</p>
+    <p class="sub">${tr('hp.est2', `<b>${monthRange(b.estimatedRange)}</b>. Estimated at a flat 10 minutes per block. <b>This is an estimate</b>: real block times wander, and the date drifts with them.`, { r: monthRange(b.estimatedRange) })}</p>
     ${bar(e, h)}
     <dl class="kv">
       <dt>${tr('bw.tip', 'Tip height')}</dt><dd><a href="${MP}/block-height/${h}" target="_blank" rel="noopener">${fmt(h)} ↗</a>${b.stale ? `<span class="pill">${tr('bw.stale', 'stale')}</span>` : ''}</dd>
@@ -145,7 +144,7 @@ async function page(el) {
     <p>${tr('hp.p2', `At block <b>${fmt(e.next)}</b> it drops from ${btc(e.now)} to ${btc(e.after)} BTC. Nobody votes on it, nobody can stop it. The code just quietly halves the reward and carries on.`, { t: fmt(e.next), a: btc(e.now), b: btc(e.after) })}</p>
     <p style="margin-bottom:0">${tr('hp.p3', 'Transaction fees are not halved. This page only counts blocks; it is not advice about anything.')}</p>
   </div>
-  <p class="note">${tr('bp.note', 'Height from mempool.space (fallback blockstream.info), cached ~60s on this server. Date range uses the recent average block time from mempool.space and 10 minutes per block; it is an estimate.')}</p>`;
+  <p class="note">${tr('bp.note', 'Height from mempool.space (fallback blockstream.info), cached ~60s on this server. Dates assume a flat 10 minutes per block; it is an estimate.')}</p>`;
 }
 
 const pg = document.getElementById('blocks-page');
